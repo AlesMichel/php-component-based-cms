@@ -1,0 +1,4 @@
+#RewriteEngine On
+#RewriteRule ^$ client/route/index.php [L]
+#RewriteRule ^projects/?$ client/route/projects/projects.php [L]
+#RewriteRule ^([a-z0-9-]+)/?$ client/route/projects/detail.php?slug=$1 [QSA,L]
