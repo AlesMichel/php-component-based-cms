@@ -1,7 +1,5 @@
 <?php
 
-
-use cms\src\Templates\cmsDefaultPage;
 include("../../autoload.php");
 
 $out = '<div class="create-form w-100 mx-auto p-4" style="max-width: 700px;">

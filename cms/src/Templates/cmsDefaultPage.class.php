@@ -104,9 +104,9 @@ class cmsDefaultPage
     public static function buildNavTabs($moduleName): string
     {
         $tabs = [
-            'Záznamy' => '/modules/viewData.php',
-            'Komponenty' => '/modules/viewComponents.php',
-            'Konfigurace modulu' => '/modules/moduleConfig.php'
+            'Data' => '/modules/module/data.php',
+            'Komponenty' => '/modules/module/components.php',
+            'Konfigurace modulu' => '/modules/module/config.php'
         ];
         // Get the current URL path (without the domain)
         $currentUrl = $_SERVER['REQUEST_URI'];

@@ -12,74 +12,15 @@ class Module
     protected int $moduleId;
     protected PDO $db;
 
-    public function __construct($moduleName = null, $tableName = null, $moduleId = null)
+    public function __construct($moduleName, $tableName = null)
     {
         //get db conn
         $this->db = connect::getInstance()->getConnection();
+        $this->moduleName = $moduleName;
+        $this->tableName = $tableName ? $tableName : $this->getTableName()['data'];
+//        $this->moduleId = $moduleId ? $moduleId : $this->getIDViaName()["data"];
         //get module name
-        switch (true) {
 
-            // Case: Only moduleId is provided
-            case ($moduleName === null && $tableName === null && $moduleId !== null):
-                $this->moduleId = $moduleId;
-                // Fetch module name and table name based on ID
-                $status = $this->getNameViaId();
-                if ($status['success']) {
-                    $this->moduleName = $status['data'];
-                    $tableStatus = $this->getTableViaName();
-                    if ($tableStatus['success']) {
-                        $this->tableName = $tableStatus['data'];
-                    } else {
-                        echo $tableStatus['error'];
-                    }
-                } else {
-                    echo $status['error'];
-                }
-                break;
-
-            // Case: Module name is provided (with or without table name)
-            case ($moduleName !== null && $tableName === null && $moduleId === null):
-                $this->moduleName = $moduleName;
-                $status = $this->getIDViaName();
-                if ($status['success']) {
-                    $this->moduleId = $status['data'];
-                }else{
-                    echo $status['error'];
-                }
-                $status = $this->getTableViaName();
-                if ($status['success']) {
-                    $this->tableName = $status['data'];
-                } else {
-                    echo $status['error'];
-                }
-                break;
-
-            case($moduleName !== null && $tableName !== null):
-
-                $this->moduleName = $moduleName;
-                $this->tableName = $tableName;
-
-                //insert table
-
-                $res = $this->createNewModule();
-                if($res['success'] === true){
-                    $_SESSION['cms_message'] = 'New module has been created';
-                    $idRes = $this->getIDViaName();
-
-                    if($idRes['success'] === true){
-                        $this->moduleId = $idRes['data'];
-                    }
-                }else{
-                    $_SESSION['cms_message_error'] = $res['error'];
-                }
-
-                break;
-
-            // Case: Neither moduleId nor moduleName is provided
-            default:
-//                echo "Module name or ID must be provided.";
-                break;
-        }
     }
 
     #region getters
@@ -103,7 +44,7 @@ class Module
         ];
         try {
             //find module table name from table modules
-            $sql = "SELECT module_table FROM `modules` WHERE module_name = :moduleName";
+            $sql = "SELECT table FROM `modules` WHERE module_name = :moduleName";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([':moduleName' => $this->moduleName]);
             $moduleTableName = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -125,7 +66,7 @@ class Module
         return $result;
     }
 
-    private function getIDViaName(): array
+    protected function getIDViaName(): array
     {
         $result = [
             'success' => false,
@@ -175,7 +116,7 @@ class Module
 
     //processes
 
-    private function createNewModule():array{
+    public function createNewModule():array{
         $result = [
             'success' => false,
             'error' => null,
@@ -215,7 +156,7 @@ class Module
             $queryCheck = $this->db->prepare("SELECT * FROM `modules` WHERE `module_name` = :name");
             $queryCheck->bindParam(":name", $this->moduleName);
             $queryCheck->execute();
-            $check =$queryCheck->fetch(PDO::FETCH_ASSOC);
+            $check = $queryCheck->fetchColumn();
             if($check) {
                 $result['error'] = 'Module with this name already exists';
             }else{
@@ -243,7 +184,6 @@ class Module
             $queryCheck->execute([':tableName' => $this->tableName]);
             $check= $queryCheck->fetch(PDO::FETCH_ASSOC);
             if ($check) {
-                echo $this->moduleName;
                 $result['error'] = "Module with this table name already exists.";
             }else{
                 $result['success'] = true;
@@ -288,17 +228,8 @@ class Module
             //table does not exist, proceed to creating new table
             //create id, columns for components
             $sql = "CREATE TABLE IF NOT EXISTS `$this->tableName` (
-                id INT(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                module_id INT(11) UNSIGNED,
-                component_id INT(11) UNSIGNED,
-                component_instance INT(11),
-                component_name VARCHAR(255),
-                component_data LONGBLOB,
-                component_data_en LONGBLOB,
-                component_multlang TINYINT(1),
-                component_required TINYINT(1),
-                FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
-                ) ENGINE=INNODB;";
+                id INT(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY
+                )";
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
             $result['success'] = true;
@@ -336,7 +267,4 @@ class Module
         }
         return true;
     }
-
-
-
 }

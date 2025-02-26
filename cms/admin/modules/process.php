@@ -1,13 +1,7 @@
 <?php
-require_once(__DIR__."/../../src/Modules/module.php");
-require_once(__DIR__."/../../src/Database/connect.php");
-include("../../Templates/cmsDefaultPage.class.php");
 
+include_once("../../autoload.php");
 $db = connect::getInstance()->getConnection();
-
-
-
-//remake for session adn action like components/process.php
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $moduleName = $_SESSION['module_name'];
@@ -29,9 +23,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         $moduleName = $_POST['create_module_name'];
         $moduleTableName = $_POST['create_module_table_name'];
         $newModule = new module($moduleName, $moduleTableName, null);
+        $_SESSION['cms_message'] = $newModule->createNewModule()['success'];
 
-
-        header("location: ../modules/index.php");
+//
+//        header("location: ../modules/index.php");
     }
 }
 
