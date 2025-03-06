@@ -1,11 +1,8 @@
 <?php
 
-//require_once(__DIR__ . "/TextField.php");
-//require_once(__DIR__ . "/Image.php");
-//require_once(__DIR__ . "/Position.php");
-//require_once(__DIR__ . "/TextArea.php");
 
-include_once("../Modules/module.php");
+
+include_once(__DIR__ . "/../Modules/module.php");
 require_once("TextField.php");
 require_once("TextArea.php");
 require_once("Position.php");
@@ -24,49 +21,43 @@ class componentCommon extends module{
             'data' => null,
             'error' => null,
         ];
-
-
         //if component is unique
         $unique = $this->componentNameIsUnique($componentName)["success"];
-        if($unique and $this->getIDViaName()['success']){
-            $moduleId = $this->getIDViaName()['data'];
-
+        if($unique){
             //create entry in module_components
             try {
                 //find module table name from table modules
                 $sql = "INSERT INTO `module_components` (module_id, component_id, name, multilang, required) VALUES (:module_id, :component_id, :name, :multilang, :required)";
                 $stmt = $this->db->prepare($sql);
                 $stmt->execute([
-                    ':module_id' => $this->moduleId,
+                    ':module_id' => $this->getID(),
                     ':component_id' => $componentId,
                     ':name' => $componentName,
                     ':multilang' => $componentIsMultilang,
                     ':required' => $componentIsRequired
                 ]);
-
-
             } catch (PDOException $e) {
                 $result['error'] = "Error fetching table name: " . $e->getMessage();
                 $result['success'] = false;
             }
-
         }else{
             $result['success'] = false;
         }
-
         //add column in module table
         return $result;
-
     }
     private function componentNameIsUnique($componentName): array
     {
+        $moduleId = $this->getID();
         $result = [
             'success' => false,
             'error' => null,
         ];
         try{
-            $queryCheck = $this->db->prepare("SELECT * FROM `module_components` WHERE `name` = :name");
+            $queryCheck = $this->db->prepare("SELECT * FROM `module_components` WHERE `name` = :name AND `module_id` = :module_id");
             $queryCheck->bindParam(":name", $componentName);
+
+            $queryCheck->bindParam(":module_id", $moduleId);
             $queryCheck->execute();
             $check = $queryCheck->fetchColumn();
             if($check) {

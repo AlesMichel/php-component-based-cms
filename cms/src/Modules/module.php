@@ -1,9 +1,5 @@
 <?php
-
-
 require_once(__DIR__."/../../src/Database/connect.php");
-
-
 
 class Module
 {
@@ -14,13 +10,17 @@ class Module
 
     public function __construct($moduleName, $tableName = null)
     {
-        //get db conn
         $this->db = connect::getInstance()->getConnection();
         $this->moduleName = $moduleName;
-        $this->tableName = $tableName ? $tableName : $this->getTableName()['data'];
-//        $this->moduleId = $moduleId ? $moduleId : $this->getIDViaName()["data"];
-        //get module name
-
+        if($tableName != null){
+            $this->tableName = $tableName;
+        }else{
+            if($this->getTableViaName()['success']){
+                $this->tableName = $this->getTableViaName()['data'];
+                echo $this->tableName;
+            }
+        }
+        $this->moduleId = $this->getID();
     }
 
     #region getters
@@ -28,11 +28,12 @@ class Module
     {
         return $this->tableName;
     }
-    public function getID()
+    public function getID(): int
     {
-        return $this->moduleId;
+        return $this->getIDViaName()['data'];
     }
-    public function getName(){
+    public function getName(): string
+    {
         return $this->moduleName;
     }
     private function getTableViaName(): array
@@ -208,7 +209,8 @@ class Module
             $sql = "INSERT INTO `modules` (module_name, module_table) VALUES (:moduleName, :moduleTableName)";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([':moduleName' => $this->moduleName, ':moduleTableName' => $this->tableName]);
-            $result['success'] = true;
+
+
 
         } catch (PDOException $e) {
             $result['error'] = $e->getMessage();
@@ -266,5 +268,40 @@ class Module
             echo "Module table does not exists";
         }
         return true;
+    }
+
+    public function getModuleComponents(){
+        $sql = "SELECT * FROM `module_components` WHERE module_id= :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(":id", $this->moduleId);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result;
+    }
+    public function updateModuleTableFields(){
+        $components = $this->getModuleComponents();
+        foreach($components as $component){
+            if($this->componentIncluded($component['name'])) echo $component['name'].' already exists';
+
+        }
+
+
+    }
+
+    /**
+     * @return bool
+     * Check if column for this component is already included in current module table
+     */
+    private function componentIncluded($componentName): bool
+    {
+
+        $sql = "SHOW COLUMNS FROM $tableName LIKE $componentName";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        if($stmt->fetch()){
+            return true;
+        }else{
+            return false;
+        }
     }
 }
