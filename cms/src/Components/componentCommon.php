@@ -12,7 +12,7 @@ require_once("Image.php");
 class componentCommon extends module{
 
     public function __construct($name) {
-        parent::__construct($name);
+        parent::__construct($name, null);
     }
     public function initComponent($componentName, $componentId, $componentIsMultilang, $componentIsRequired): array
     {

@@ -12,15 +12,13 @@ class Module
     {
         $this->db = connect::getInstance()->getConnection();
         $this->moduleName = $moduleName;
-        if($tableName != null){
+        if ($tableName) {
             $this->tableName = $tableName;
-        }else{
-            if($this->getTableViaName()['success']){
-                $this->tableName = $this->getTableViaName()['data'];
-                echo $this->tableName;
-            }
+        } else {
+            $this->tableName = $this->getIDViaName()['data'];
+            $this->moduleId = $this->getID();
         }
-        $this->moduleId = $this->getID();
+
     }
 
     #region getters
@@ -31,12 +29,13 @@ class Module
     public function getID(): int
     {
         return $this->getIDViaName()['data'];
+
     }
     public function getName(): string
     {
         return $this->moduleName;
     }
-    private function getTableViaName(): array
+    public function getTableViaName(): array
     {
         $result = [
             'success' => false,
@@ -45,21 +44,22 @@ class Module
         ];
         try {
             //find module table name from table modules
-            $sql = "SELECT table FROM `modules` WHERE module_name = :moduleName";
+            $sql = "SELECT module_table FROM `modules` WHERE module_name = :moduleName";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([':moduleName' => $this->moduleName]);
-            $moduleTableName = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (!$moduleTableName || !isset($moduleTableName['module_table'])) {
-                $result['error'] = 'Module table not found'; // Error if no row was fetched or column is missing
-                return $result; // Early return to avoid further execution
-            }
-            //compare with db
-            $queryCheck = $this->db->prepare("SHOW TABLES LIKE :tableName");
-            $queryCheck->execute([':tableName' => $moduleTableName['module_table']]);
-            $tableExists = $queryCheck->fetch();
-            if ($tableExists) {
-                $result['data'] = $moduleTableName['module_table'];
-                $result['success'] = true;
+            $moduleTableName = $stmt->fetch(PDO::FETCH_COLUMN);
+            if($moduleTableName === false){
+                $result['success'] = false;
+                $result['error'] = "module table not found";
+            }else{
+
+                $queryCheck = $this->db->prepare("SHOW TABLES LIKE ?");
+                $queryCheck->execute([$moduleTableName]);
+                $tableExists = $queryCheck->fetch(PDO::FETCH_COLUMN);
+                if ($tableExists) {
+                    $result['data'] = $moduleTableName;
+                    $result['success'] = true;
+                }
             }
         } catch (PDOException $e) {
             $result['error'] = "Error fetching table name: " . $e->getMessage();
@@ -275,8 +275,7 @@ class Module
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(":id", $this->moduleId);
         $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result;
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     public function updateModuleTableFields(){
         $components = $this->getModuleComponents();
@@ -284,8 +283,6 @@ class Module
             if($this->componentIncluded($component['name'])) echo $component['name'].' already exists';
 
         }
-
-
     }
 
     /**
@@ -295,7 +292,7 @@ class Module
     private function componentIncluded($componentName): bool
     {
 
-        $sql = "SHOW COLUMNS FROM $tableName LIKE $componentName";
+        $sql = "SHOW COLUMNS FROM $this->tableName LIKE $componentName";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         if($stmt->fetch()){
