@@ -11,8 +11,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
 //    $currentModule = $_GET['current_module']; // Get current module
 //    $componentId = $_POST['component_id'];  // Get the selected component's ID
     //now we have components id and we wil fetch its name by id
-
-    $currentModuleId = $_SESSION['current_module_id'];
+    
     $out = '';
 
     $out .= componentCommon::renderComponents($db);

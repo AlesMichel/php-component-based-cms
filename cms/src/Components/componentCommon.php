@@ -3,10 +3,10 @@
 
 
 include_once(__DIR__ . "/../Modules/module.php");
-require_once("TextField.php");
-require_once("TextArea.php");
-require_once("Position.php");
-require_once("Image.php");
+include_once("TextField.php");
+include_once("TextArea.php");
+include_once("Position.php");
+include_once("Image.php");
 
 
 class componentCommon extends module{
@@ -124,37 +124,8 @@ class componentCommon extends module{
         }
         return $out;
     }
-    public static function printComponentTable($componentId, $componentName, $db):string{
-        $componentType = self::findComponentTypeById($componentId, $db);
-        return '<table class="table table-bordered">
-                <tr>
-                    <td>Název komponenty</td>
-                    <td>'. $componentName .'</td>
-                </tr>
-                <tr>
-                    <td>Typ komponenty</td>
-                    <td>'. $componentType .'</td>
-                </tr>
 
-            </table>';
-    }
-    public static function findComponentTypeById($componentId, $db){
-        try{
-            $sql = 'SELECT component_type FROM components WHERE id = :component_id';
-            $stmt = $db->prepare($sql);
-            $stmt->bindParam(':component_id', $componentId);
-            $stmt->execute();
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $componentType = $row["component_type"];
-            if($componentType){
-                return $componentType;
-            }else{
-                return false;
-            }
-        } catch (PDOException $e) {
-            echo "Error: " . $e->getMessage();
-        }
-    }
+
     public function getComponentFields($insertArray, $edit = false): string
     {
         $out = '';
@@ -222,4 +193,51 @@ class componentCommon extends module{
         }
         return $out;
     }
+
+    public function getComponentParams($componentName){
+        $sql = "SELECT * FROM `module_components` WHERE `name` = :componentName";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['componentName' => $componentName]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function deleteComponent($componentName): bool{
+        //1. delete component in current table
+        $deleteFromModuleTable = $this->deleteComponentFromModuleTable($componentName);
+        //2. delete component in common module_components
+        $deleteFromModuleComponents = $this->deleteComponentFromModuleComponents($componentName);
+        if($deleteFromModuleTable and $deleteFromModuleComponents){
+             return true;
+        }else{return false;}
+    }
+
+    private function deleteComponentFromModuleComponents($componentName)
+    {
+        try {
+            $sql = "DELETE FROM module_components WHERE name = :componentName";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':componentName', $componentName, PDO::PARAM_STR);
+            return $stmt->execute(); // Vrací true, pokud uspěje
+        } catch (Exception $e) {
+            echo "Chyba při mazání z tabulky $this->tableName: " . $e->getMessage();
+
+            return false;
+        }
+    }
+
+    private function deleteComponentFromModuleTable($componentName)
+    {
+        try {
+            $sql = "ALTER TABLE `$this->tableName` DROP COLUMN `$componentName`";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute();
+        } catch (Exception $e) {
+            echo "Chyba při mazání sloupce z tabulky $this->tableName: " . $e->getMessage();
+
+            return false;
+        }
+    }
+
+
+
 }
