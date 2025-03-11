@@ -34,7 +34,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         <div class='my-3'>
             <div class='form-check form-switch'>
             <input type='hidden' name='component_isMultilang' value='0'>
-            <input name='component_isMultilang' class='form-check-input' type='checkbox' id='isMultilang' value='1'  " . ($componentParams['multilang'] == 1 ? 'checked' : '') . " />
+            <input name='component_isMultlang' class='form-check-input' type='checkbox' id='isMultilang' value='1'  " . ($componentParams['multilang'] == 1 ? 'checked' : '') . " />
             <label class='form-check-label' for='isMultilang'>Komponenta je vícejazyčná</label>
             </div>
        </div>

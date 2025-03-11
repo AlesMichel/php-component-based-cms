@@ -1,19 +1,19 @@
 <?php
 
-
-
 include_once(__DIR__ . "/../Modules/module.php");
 include_once("TextField.php");
 include_once("TextArea.php");
 include_once("Position.php");
 include_once("Image.php");
 
+class componentCommon extends module
+{
 
-class componentCommon extends module{
-
-    public function __construct($name) {
+    public function __construct($name)
+    {
         parent::__construct($name, null);
     }
+
     public function initComponent($componentName, $componentId, $componentIsMultilang, $componentIsRequired): array
     {
         $result = [
@@ -23,7 +23,8 @@ class componentCommon extends module{
         ];
         //if component is unique
         $unique = $this->componentNameIsUnique($componentName)["success"];
-        if($unique){
+
+        if ($unique) {
             //create entry in module_components
             try {
                 //find module table name from table modules
@@ -40,40 +41,46 @@ class componentCommon extends module{
                 $result['error'] = "Error fetching table name: " . $e->getMessage();
                 $result['success'] = false;
             }
-        }else{
+        } else {
             $result['success'] = false;
+            $result['error'] .= 'Component is not unique';
         }
         //add column in module table
         return $result;
     }
-    private function componentNameIsUnique($componentName): array
+
+    private function componentNameIsUnique(string $componentName): array
     {
         $moduleId = $this->getID();
         $result = [
             'success' => false,
             'error' => null,
         ];
-        try{
-            $queryCheck = $this->db->prepare("SELECT * FROM `module_components` WHERE `name` = :name AND `module_id` = :module_id");
+        try {
+            $queryCheck = $this->db->prepare("
+            SELECT COUNT(*) FROM `module_components` 
+            WHERE `name` = :name AND `module_id` = :module_id
+        ");
             $queryCheck->bindParam(":name", $componentName);
-
-            $queryCheck->bindParam(":module_id", $moduleId);
+            $queryCheck->bindParam(":module_id", $moduleId, PDO::PARAM_INT);
             $queryCheck->execute();
-            $check = $queryCheck->fetchColumn();
-            if($check) {
+            $count = $queryCheck->fetchColumn();
+            echo $count;
+            if ($count > 0) {
                 $result['error'] = 'Module with this name already exists';
-            }else{
+            } else {
                 $result['success'] = true;
             }
-        }catch (PDOException $e) {
+        } catch (PDOException $e) {
             $result['error'] = $e->getMessage();
         }
+
         return $result;
     }
 
 
-
-    public static function fetchAllComponents($db) {
+    public static function fetchAllComponents($db)
+    {
         try {
             $sql = 'SELECT * FROM components';
             $stmt = $db->prepare($sql);
@@ -85,8 +92,10 @@ class componentCommon extends module{
         }
         return $fetchAllComponents;
     }
+
     //renders select box with all components available
-    public static function renderComponents($db): string {
+    public static function renderComponents($db): string
+    {
         // Fetch all components from the database
         $data = self::fetchAllComponents($db);
         if ($data === null) {
@@ -106,126 +115,99 @@ class componentCommon extends module{
         $out .= '<div id="dynamic-fields"></div>';
         return $out;
     }
+
     public static function createComponent($componentId): string
     {
         //new out
         $out = '';
         //build field
-        if($componentId === null) {
+        if ($componentId === null) {
             echo "No component found";
-        }else if($componentId == 1) {
+        } else if ($componentId == 1) {
             $out .= TextField::getFields();
-        }elseif($componentId == 2) {
+        } elseif ($componentId == 2) {
             $out .= Image::getFields();
-        } elseif($componentId == 3) {
+        } elseif ($componentId == 3) {
             $out .= Position::getFields();
-        }elseif($componentId == 4) {
+        } elseif ($componentId == 4) {
             $out .= TextArea::getFields();
         }
         return $out;
     }
 
-
-    public function getComponentFields($insertArray, $edit = false): string
+    public function getInsertFields(): string
     {
         $out = '';
-        if($edit){
-            foreach($insertArray as $component){
-                $getComponentId = $component['component_id'];
-                $getComponentName = $component['component_name'];
-                $getComponentIsRequired = (int)$component['component_required'];
-                $getComponentIsMultlang = (int)$component['component_multlang'];
-                $getComponentData = $component['component_data'];
-                $getComponentDataEn = $component['component_data_en'];
+        $moduleComponents = $this->getModuleComponents();
+        foreach ($moduleComponents as $component) {
+            $getComponentId = $component['component_id'];
+            $getComponentName = $component['name'];
+            $getComponentIsMultlang = $component['multilang'];
+            $getComponentIsRequired = $component['required'];
 
-                $_SESSION["component_pass_data_update"][] = [
-                    'component_id' => $getComponentId,
-                    'component_name' => $getComponentName,
-                    'component_required' => $getComponentIsRequired,
-                    'component_multlang' => $getComponentIsMultlang
-                ];
-
-                if($getComponentId == 1){
-                    $textField = new TextField($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang, $getComponentData, $getComponentDataEn);
-                    $out .= $textField->getDataFieldsForEdit();
-                }else if($getComponentId == 2){
-
-                    $image = new Image($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang, $getComponentData, $getComponentDataEn);
-                    $out .= $image->getDataFieldsForEdit();
-
-                }else if($getComponentId == 3){
-                    $position = new Position($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang, $getComponentData, $getComponentDataEn);
-                    $out .= $position->getDataFieldsForEdit();
-                }else if($getComponentId == 4){
-                    $textArea = new TextArea($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang, $getComponentData, $getComponentDataEn);
-                    $out .= $textArea->getDataFieldsForEdit();
-                }
-                else{
-                    $out .= 'No data fields found';
-                }
-            }
-        }
-        else{
-            foreach($insertArray as $component){
-                $getComponentName = $component['component_name'];
-                $getComponentId = $component['component_id'];
-                $getComponentIsRequired = $component['component_required'];
-                $getComponentIsMultlang = $component['component_multlang'];
-
-                if($getComponentId == 1){
-                    $textField = new TextField($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                    $out .= $textField->getDataFieldsForInsert();
-                }else if($getComponentId == 2){
-                    $image = new Image($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                    $out .= $image->getDataFieldsForInsert();
-                }else if($getComponentId == 3){
-                    $position = new Position($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                    $out .= $position->getDataFieldsForInsert();
-                }else if($getComponentId == 4){
-                    $textArea = new TextArea($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                    $out .= $textArea->getDataFieldsForInsert();
-                }
-
-                else{
-                    $out .= 'No data fields found';
-                }
+            if ($getComponentId == 1) {
+                $textField = new TextField($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+                $out .= $textField->getDataFieldsForInsert();
+            } else if ($getComponentId == 2) {
+                $image = new Image($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+                $out .= $image->getDataFieldsForInsert();
+            } else if ($getComponentId == 3) {
+                $position = new Position($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+                $out .= $position->getDataFieldsForInsert();
+            } else if ($getComponentId == 4) {
+                $textArea = new TextArea($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+                $out .= $textArea->getDataFieldsForInsert();
             }
         }
         return $out;
+
     }
 
-    public function getComponentParams($componentName){
+    public function getComponentParams($componentName)
+    {
         $sql = "SELECT * FROM `module_components` WHERE `name` = :componentName";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['componentName' => $componentName]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function deleteComponent($componentName): bool{
+    public function deleteComponent($componentName, $isMultilang): bool
+    {
         //1. delete component in current table
         $deleteFromModuleTable = $this->deleteComponentFromModuleTable($componentName);
         //2. delete component in common module_components
-        $deleteFromModuleComponents = $this->deleteComponentFromModuleComponents($componentName);
-        if($deleteFromModuleTable and $deleteFromModuleComponents){
-             return true;
-        }else{return false;}
-    }
-
-    private function deleteComponentFromModuleComponents($componentName)
-    {
-        try {
-            $sql = "DELETE FROM module_components WHERE name = :componentName";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':componentName', $componentName, PDO::PARAM_STR);
-            return $stmt->execute(); // Vrací true, pokud uspěje
-        } catch (Exception $e) {
-            echo "Chyba při mazání z tabulky $this->tableName: " . $e->getMessage();
-
+        $deleteFromModuleComponents = $this->deleteComponentFromModuleComponents($componentName, $isMultilang);
+        if ($deleteFromModuleTable and $deleteFromModuleComponents) {
+            return true;
+        } else {
             return false;
         }
     }
 
-    private function deleteComponentFromModuleTable($componentName)
+    private function deleteComponentFromModuleComponents($componentName, $isMultilang)
+    {
+        try {
+            $sql = "DELETE FROM module_components WHERE name = :componentName";
+            $stmt = $this->db->prepare($sql);
+
+            if ($isMultilang == 1) {
+                $columnNameEn = $componentName . 'EN';
+
+                // Smažeme obě varianty (s EN i bez)
+                $success1 = $stmt->execute([':componentName' => $columnNameEn]);
+                $success2 = $stmt->execute([':componentName' => $componentName]);
+                return $success1 && $success2; // Vrátí true pouze pokud obě operace uspějí
+            } else {
+                return $stmt->execute([':componentName' => $componentName]); // Vrátí výsledek mazání
+            }
+        } catch (Exception $e) {
+            echo "Chyba při mazání z tabulky module_components: " . $e->getMessage();
+            return false;
+        }
+    }
+
+
+    private function deleteComponentFromModuleTable($componentName): bool
     {
         try {
             $sql = "ALTER TABLE `$this->tableName` DROP COLUMN `$componentName`";
@@ -233,11 +215,26 @@ class componentCommon extends module{
             return $stmt->execute();
         } catch (Exception $e) {
             echo "Chyba při mazání sloupce z tabulky $this->tableName: " . $e->getMessage();
-
             return false;
         }
     }
 
+    public function saveComponentData($componentName, $componentData, $componentDataEn, $isMultilang){
+        try{
+            $sql = "INSERT INTO `$this->tableName` WHERE COLUMN :columnName VALUES (:componentData) ";
+            $stmt = $this->db->prepare($sql);
+            if ($isMultilang == 1) {
+                $columnNameEn = $componentName . 'EN';
+                $success1 = $stmt->execute([':componentName' => $componentName, ':componentData' => $componentData]);
+                $success2 = $stmt->execute([':componentName' => $columnNameEn, ':componentData' => $componentDataEn]);
+                return $success1 && $success2;
+            } else {
+                return $stmt->execute([':componentName' => $componentName, ':componentData' => $componentDataEn]);
+            }
+        }catch (Exception $e){
+
+        }
+    }
 
 
 }

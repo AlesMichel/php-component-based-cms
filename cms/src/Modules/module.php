@@ -20,8 +20,6 @@ class Module
         }
     }
 
-
-
     #region getters
     public function getTableName()
     {
@@ -135,13 +133,9 @@ class Module
             if($insertTable['success'] === true && $insertName['success'] === true){
                 $result['success'] = true;
             }else{
-                $result['error'] = $insertName['error'] . $insertTable['error'];
-            }
-
-        }else{
-            $result['error'] = $moduleTableIsUnique['error'] . ' ' . $moduleNameIsUnique['error'];
-
-        }
+                $result['error'] = $insertName['error'] . $insertTable['error'];}
+            }else{
+                $result['error'] = $moduleTableIsUnique['error'] . ' ' . $moduleNameIsUnique['error'];}
         return $result;
     }
 
@@ -281,20 +275,26 @@ class Module
     }
     public function updateModuleTableFields(): string
     {
+        $message = '';
         $components = $this->getModuleComponents();
         foreach ($components as $component) {
-            $message = '';
+
             $componentName = $component['name'];
+            $multilang = $component['multilang'];
             $exists = $this->componentIncluded($componentName);
             if (!$exists) {
                 try {
-                    // Najdi správný typ sloupce
                     $columnType = $this->getComponentColumn($component['component_id']);
-                    // Přidej sloupec do databáze
-                    $sql = "ALTER TABLE `$this->tableName` ADD COLUMN `$componentName` $columnType";
+
+                    if($multilang == 1){
+                        $sql = "ALTER TABLE `$this->tableName` 
+                            ADD COLUMN `$componentName` $columnType, 
+                            ADD COLUMN `{$componentName}EN` $columnType";
+                    }else{
+                        $sql = "ALTER TABLE `$this->tableName` ADD COLUMN `$componentName` $columnType";
+                    }
                     $stmt = $this->db->prepare($sql);
                     $stmt->execute();
-
                     $message .= "Sloupec `$componentName` byl úspěšně přidán jako `$columnType`.<br>";
                 } catch (PDOException $e) {
                     $message .= "Chyba při přidávání sloupce `$componentName`: " . $e->getMessage() . "<br>";
@@ -371,10 +371,5 @@ class Module
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-
-
-
-
 
 }

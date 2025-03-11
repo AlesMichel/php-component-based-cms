@@ -4,23 +4,24 @@ $out = '';
 
 // Print navigation
 $moduleName = $_GET["module_name"];
-$_SESSION['module_name'] = $moduleName;
+
 $module = new Module($moduleName);
 
 $out .= cmsDefaultPage::buildNavTabs($moduleName);
 
 // Get module data for admin
 $moduleData = $module->getModuleDataForAdmin();
+$moduleComponents = $module->getModuleComponents();
 var_dump($moduleData); // Debugging to check the structure of $moduleData
 
 // Check if any components are found for this module
-if (empty($moduleData)) {
+if (empty($moduleComponents)) {
     $out .= "<p>No components found for this module.</p>";
 } elseif (empty($moduleData)) {
     $out .= "<p>Tento modul nema zadne záznamy</p>";
 
-    $out .= "<form method='POST' action='newEntry.php' class=''>";
-    $out .= "<button class='btn btn-primary btn-sm my-3' type='submit'>Přidat nový záznam</button>";
+    $out .= "<form method='POST' action='entry.php' class=''>";
+    $out .= "<button class='btn btn-primary btn-sm my-3' name='method' value='add' type='submit'>Přidat nový záznam</button>";
     $out .= "</form>";
 } else {
     $out .= "<div class=''><h5>Záznamy pro modul: " . htmlspecialchars($moduleName) . "</h5></div>";

@@ -29,6 +29,7 @@ class TextField{
         <label for='textField' class='form-label mt-3'>Název komponenty</label>
         <input class='form-control' type='text' id='textField' name='component_name' placeholder='...' required/>
         
+        <input type='hidden' id='component_id' value='1' name='component_id' >
         <div class='mt-3'>
             <div class='form-check form-switch'>
             <input type='hidden' name='component_isRequired' value='0'>
