@@ -160,7 +160,45 @@ class componentCommon extends module
             }
         }
         return $out;
+    }
 
+    public function getEditFields($entryId): string
+    {
+
+        //get data for entry id
+        //build forms with data
+        //fetch form data in proccess
+
+        $out = '';
+        $moduleComponents = $this->getModuleComponents();
+        foreach ($moduleComponents as $component) {
+            $getComponentId = $component['component_id'];
+            $getComponentName = $component['name'];
+            $getComponentIsMultlang = $component['multilang'];
+            $getComponentIsRequired = $component['required'];
+
+            if ($getComponentId == 1) {
+                $textField = new TextField($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+                $out .= $textField->getDataFieldsForEdit();
+            } else if ($getComponentId == 2) {
+                $image = new Image($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+                $out .= $image->getDataFieldsForEdit();
+            } else if ($getComponentId == 3) {
+                $position = new Position($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+                $out .= $position->getDataFieldsForEdit();
+            } else if ($getComponentId == 4) {
+                $textArea = new TextArea($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+                $out .= $textArea->getDataFieldsForEdit();
+            }
+        }
+        return $out;
+    }
+
+    public function getModuleDataForInstance($instance){
+        $sql = "SELECT * FROM $this->tableName WHERE `id` = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $instance]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function getComponentParams($componentName)
@@ -219,22 +257,30 @@ class componentCommon extends module
         }
     }
 
-    public function saveComponentData($componentName, $componentData, $componentDataEn, $isMultilang){
-        try{
-            $sql = "INSERT INTO `$this->tableName` WHERE COLUMN :columnName VALUES (:componentData) ";
-            $stmt = $this->db->prepare($sql);
-            if ($isMultilang == 1) {
+    public function saveComponentData($componentName, $componentData, $componentDataEn = null): bool
+    {
+        try {
+            if ($componentDataEn !== null) {
                 $columnNameEn = $componentName . 'EN';
-                $success1 = $stmt->execute([':componentName' => $componentName, ':componentData' => $componentData]);
-                $success2 = $stmt->execute([':componentName' => $columnNameEn, ':componentData' => $componentDataEn]);
-                return $success1 && $success2;
+                $sql = "INSERT INTO `$this->tableName` (`$componentName`, `$columnNameEn`) VALUES (:componentData, :componentDataEn)";
+                $stmt = $this->db->prepare($sql);
+                return $stmt->execute([
+                    ':componentData' => $componentData,
+                    ':componentDataEn' => $componentDataEn
+                ]);
             } else {
-                return $stmt->execute([':componentName' => $componentName, ':componentData' => $componentDataEn]);
+                $sql = "INSERT INTO `$this->tableName` (`$componentName`) VALUES (:componentData)";
+                $stmt = $this->db->prepare($sql);
+                return $stmt->execute([
+                    ':componentData' => $componentData
+                ]);
             }
-        }catch (Exception $e){
-
+        } catch (Exception $e) {
+            echo $e->getMessage();
+            return false;
         }
     }
+
 
 
 }

@@ -29,19 +29,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     else if ($action == "insert") {
 
         $components = $component->getModuleComponents();
-        foreach ($components as $component) {
-            $componentName = $component['name'];
-            $componentIsMultlang = $component['multilang'];
+        foreach ($components as $c) {
+            $componentName = $c['name'];
+            $componentIsMultlang = $c['multilang'];
             $componentFieldName = "component_$componentName";
 
             if ($componentIsMultlang == 1) {
                 $componentData = $_POST[$componentFieldName];
+                $componentDataEn = $_POST[$componentFieldName];
+                $component->saveComponentData($componentName, $componentData, $componentDataEn);
             } else {
                 $componentFieldName = "component_en_$componentName";
                 $componentData = $_POST[$componentFieldName];
-                $componentDataEn = $_POST[$componentFieldName];
+                $component->saveComponentData($componentName, $componentData, null);
             }
-
         }
     }
 }

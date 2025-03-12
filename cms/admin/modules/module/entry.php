@@ -2,22 +2,27 @@
 include_once("../../../autoload.php");
 
 $out = '';
+$moduleName = $_SESSION['module_name'];
+$component = new componentCommon($moduleName);
 
-//1. decide if creating new entries or editing
 if($_SERVER ['REQUEST_METHOD'] == 'POST'){
     $action = $_POST['method'];
-
     if($action == 'add'){
-        $moduleName = $_SESSION['module_name'];
-        $components = new componentCommon($moduleName);
-        //get fields
         $out .= '<form action="components/process.php" method="post" enctype="multipart/form-data" >';
-        $out .= $components->getInsertFields();
+        $out .= $component->getInsertFields();
         $out .= '<button class="btn btn-primary mt-3" type="submit" name="action" value="insert">Pridat</button>';
         $out .= "</form>";
-
+    }else if ($action == 'edit'){
+        $id = $_POST['id'];
+//        $out .= '<form action="components/process.php" method="post" enctype="multipart/form-data" >';
+//        $out .= $component->getInsertFields();
+//        $out .= '<button class="btn btn-primary mt-3" type="submit" name="action" value="edit">Upravit</button>';
+//        $out .= '<button class="btn btn-danger mt-3 ms-2" type="submit" name="action" value="delete">Smazat</button>';
+//        $out .= "</form>"
+        var_dump($component->getModuleDataForInstance($id));
 
     }
+
 }
 
 

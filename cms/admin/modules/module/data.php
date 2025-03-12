@@ -2,19 +2,13 @@
 include_once("../../../autoload.php");
 $out = '';
 
-// Print navigation
 $moduleName = $_GET["module_name"];
-
 $module = new Module($moduleName);
-
+$_SESSION["module_name"] = $moduleName;
 $out .= cmsDefaultPage::buildNavTabs($moduleName);
-
-// Get module data for admin
 $moduleData = $module->getModuleDataForAdmin();
 $moduleComponents = $module->getModuleComponents();
-var_dump($moduleData); // Debugging to check the structure of $moduleData
 
-// Check if any components are found for this module
 if (empty($moduleComponents)) {
     $out .= "<p>No components found for this module.</p>";
 } elseif (empty($moduleData)) {
@@ -29,26 +23,32 @@ if (empty($moduleComponents)) {
     $out .= "<button name='method' class='btn btn-primary btn-sm my-3' value='add' type='submit'>Přidat nový záznam</button>";
     $out .= "</form>";
 
-    // Loop through each module data entry
     foreach ($moduleData as $moduleId => $components) {
-        // Create a new section for each module ID
+
         $out .= "<h6>Instance ID: " . htmlspecialchars($moduleId) . "</h6>";
         $out .= "<table class='table table-bordered'>";
         $out .= "<thead>
                  <tr>
                     <th>Název komponenty</th>
                     <th>Hodnota komponenty</th>
+                    <th>Akce</th>
                  </tr>
              </thead>";
         $out .= "<tbody>";
 
-        // Loop through the components of each module
         foreach ($components as $component) {
-            // Start the table row
             $out .= "<tr>";
             $out .= "<td>" . htmlspecialchars($component['componentname']) . "</td>";
             $out .= "<td>" . htmlspecialchars($component['componentvalue']) . "</td>";
+            $out .= "<td>
+            <form method='POST' action='entry.php'>
+                <input name='id' type='hidden' value=" . $component['componentid'] . ">
+                <button class='btn btn-sm btn-primary' name='method' value='edit'>Upravit</button>
+            </form>
+            </td>";
             $out .= "</tr>";
+
+
         }
 
         $out .= "</tbody>";
@@ -58,4 +58,4 @@ if (empty($moduleComponents)) {
 
 $buildPage = new cmsDefaultPage($out);
 $buildPage->buildLayout();
-?>
+
