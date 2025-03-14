@@ -350,14 +350,15 @@ class Module
             // Loop through the module components
             foreach ($moduleComponents as $component) {
                 $name = $component['name'];
-                $value = isset($row[$name]) ? $row[$name] : null;
-                $componentId = $component['component_id']; // Assuming component_id exists
+                $value = $row[$name] ?? null;
+                $componentId = $component['component_id'];
+                $instance = $component['id'];
 
-                // Assign component data under the respective ID
                 $newArray[$id][] = [
                     "componentname" => $name,
                     "componentvalue" => $value,
-                    "componentid" => $componentId
+                    "componentid" => $componentId,
+                    'instance' => $instance
                 ];
             }
         }

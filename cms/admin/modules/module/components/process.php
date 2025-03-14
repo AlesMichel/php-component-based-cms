@@ -27,7 +27,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     //actions for data management
     else if ($action == "insert") {
-
         $components = $component->getModuleComponents();
         foreach ($components as $c) {
             $componentName = $c['name'];
@@ -44,5 +43,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $component->saveComponentData($componentName, $componentData, null);
             }
         }
+    }else if($action == "updateData"){
+        $instance = $_SESSION['id'];
+        $components = $component->getModuleComponents();
+        foreach ($components as $c) {
+            $componentName = $c['name'];
+            $componentIsMultlang = $c['multilang'];
+            $componentFieldName = "component_$componentName";
+            $componentFieldNameEN = "component_en_$componentName";
+
+            if ($componentIsMultlang == 1) {
+                $componentData = $_POST[$componentFieldName];
+                $componentDataEn = $_POST[$componentFieldName];
+                $component->saveComponentData($componentName, $componentData, $componentDataEn, $instance);
+            } else {
+                $componentFieldName = "component_en_$componentName";
+                $componentData = $_POST[$componentFieldName];
+                $component->saveComponentData($componentName, $componentData, null, $instance);
+            }
+        }
+
+
+    }else if($action == "deleteData"){
+        $instance = $_SESSION['id'];
+        $components = $component->getModuleComponents();
+        foreach ($components as $c) {
+            $componentName = $c['name'];
+            $component->deleteComponentData($instance);
+        }
+
     }
+
 }

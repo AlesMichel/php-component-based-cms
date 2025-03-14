@@ -162,43 +162,92 @@ class componentCommon extends module
         return $out;
     }
 
-    public function getEditFields($entryId): string
+    public function getModuleDataForAdminForInstance($instance): array
     {
-
-        //get data for entry id
-        //build forms with data
-        //fetch form data in proccess
-
-        $out = '';
         $moduleComponents = $this->getModuleComponents();
-        foreach ($moduleComponents as $component) {
-            $getComponentId = $component['component_id'];
-            $getComponentName = $component['name'];
-            $getComponentIsMultlang = $component['multilang'];
-            $getComponentIsRequired = $component['required'];
+        $moduleData = $this->getModuleData();
+        $newArray = [];
 
-            if ($getComponentId == 1) {
-                $textField = new TextField($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                $out .= $textField->getDataFieldsForEdit();
-            } else if ($getComponentId == 2) {
-                $image = new Image($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                $out .= $image->getDataFieldsForEdit();
-            } else if ($getComponentId == 3) {
-                $position = new Position($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                $out .= $position->getDataFieldsForEdit();
-            } else if ($getComponentId == 4) {
-                $textArea = new TextArea($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                $out .= $textArea->getDataFieldsForEdit();
+        foreach ($moduleData as $row) {
+            $id = $row['id'];
+
+            if ((int)$id !== (int)$instance) {
+                continue;
+            }
+
+            if (!isset($newArray[$id])) {
+                $newArray[$id] = [];
+            }
+
+            foreach ($moduleComponents as $component) {
+                $name = $component['name'] ?? ''; // Výchozí hodnota
+                $data = $row[$name] ?? null;
+                $componentId = $component['component_id'] ?? null;
+                $multilang = $component["multilang"] ?? 0;
+                $required = $component["required"] ?? 0;
+                $dataEn = null;
+
+                if ($multilang == 1) {
+                    $enFieldName = $name . 'EN';
+                    $dataEn = $row[$enFieldName] ?? null;
+                }
+
+                $componentData = [
+                    "name" => $name,
+                    "data" => $data,
+                    "dataEn" => $dataEn,
+                    "id" => $componentId,
+                    "multilang" => $multilang,
+                    "required" => $required
+                ];
+
+                $newArray[$id][] = $componentData;
+            }
+        }
+
+        return $newArray;
+    }
+
+
+
+    public function getEditFields($instance): string
+    {
+        $out = '';
+        $data = $this->getModuleDataForAdminForInstance($instance);
+
+        foreach ($data as $row) {
+            foreach ($row as $component) {
+                $getComponentId = $component['id'];
+                $getComponentName = $component['name'];
+                $getComponentIsMultlang = $component['multilang'];
+                $getComponentIsRequired = $component['required'];
+                $getComponentData = $component['data'];
+                $getComponentDataEn = $component['dataEn'];
+
+                if ($getComponentId == 1) {
+                    $textField = new TextField($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang, $getComponentData, $getComponentDataEn);
+                    $out .= $textField->getDataFieldsForEdit();
+                } else if ($getComponentId == 2) {
+                    $image = new Image($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+                    $out .= $image->getDataFieldsForEdit();
+                } else if ($getComponentId == 3) {
+                    $position = new Position($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+                    $out .= $position->getDataFieldsForEdit();
+                } else if ($getComponentId == 4) {
+                    $textArea = new TextArea($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+                    $out .= $textArea->getDataFieldsForEdit();
+                }
             }
         }
         return $out;
     }
 
-    public function getModuleDataForInstance($instance){
+    public function getModuleDataForInstance($instance)
+    {
         $sql = "SELECT * FROM $this->tableName WHERE `id` = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $instance]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getComponentParams($componentName)
@@ -257,29 +306,57 @@ class componentCommon extends module
         }
     }
 
-    public function saveComponentData($componentName, $componentData, $componentDataEn = null): bool
+    public function saveComponentData($componentName, $componentData, $componentDataEn = null, $instance = null): bool
     {
         try {
-            if ($componentDataEn !== null) {
-                $columnNameEn = $componentName . 'EN';
-                $sql = "INSERT INTO `$this->tableName` (`$componentName`, `$columnNameEn`) VALUES (:componentData, :componentDataEn)";
+            $columnNameEn = $componentName . 'EN';
+            if ($instance !== null) {
+                $sql = "UPDATE `$this->tableName` 
+                    SET `$componentName` = :componentData"
+                    . ($componentDataEn !== null ? ", `$columnNameEn` = :componentDataEn" : "") . " 
+                    WHERE `id` = :instance";
                 $stmt = $this->db->prepare($sql);
-                return $stmt->execute([
-                    ':componentData' => $componentData,
-                    ':componentDataEn' => $componentDataEn
-                ]);
-            } else {
-                $sql = "INSERT INTO `$this->tableName` (`$componentName`) VALUES (:componentData)";
-                $stmt = $this->db->prepare($sql);
-                return $stmt->execute([
+                $params = [
+                    ':instance' => $instance,
                     ':componentData' => $componentData
-                ]);
+                ];
+                if ($componentDataEn !== null) {
+                    $params[':componentDataEn'] = $componentDataEn;
+                }
+                return $stmt->execute($params);
+            } else {
+                // INSERT s ID nastaveným automaticky
+                $sql = "INSERT INTO `$this->tableName` (`id`, `$componentName`"
+                    . ($componentDataEn !== null ? ", `$columnNameEn`" : "") . ") 
+                    VALUES (NULL, :componentData"
+                    . ($componentDataEn !== null ? ", :componentDataEn" : "") . ")";
+                $stmt = $this->db->prepare($sql);
+                $params = [':componentData' => $componentData];
+                if ($componentDataEn !== null) {
+                    $params[':componentDataEn'] = $componentDataEn;
+                }
+                return $stmt->execute($params);
             }
         } catch (Exception $e) {
-            echo $e->getMessage();
+            echo "Chyba: " . $e->getMessage();
             return false;
         }
     }
+
+    public function deleteComponentData($instance): bool
+    {
+        try {
+            $sql = "DELETE FROM `$this->tableName` WHERE `id` = :instance";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([':instance' => $instance]);
+        } catch (Exception $e) {
+            echo "Chyba: " . $e->getMessage();
+            return false;
+        }
+    }
+
+
+
 
 
 

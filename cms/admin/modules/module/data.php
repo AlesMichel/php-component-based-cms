@@ -23,9 +23,9 @@ if (empty($moduleComponents)) {
     $out .= "<button name='method' class='btn btn-primary btn-sm my-3' value='add' type='submit'>Přidat nový záznam</button>";
     $out .= "</form>";
 
-    foreach ($moduleData as $moduleId => $components) {
+    foreach ($moduleData as $instance => $components) {
 
-        $out .= "<h6>Instance ID: " . htmlspecialchars($moduleId) . "</h6>";
+//        $out .= "<h6>Instance ID: " . htmlspecialchars($instance) . "</h6>";
         $out .= "<table class='table table-bordered'>";
         $out .= "<thead>
                  <tr>
@@ -42,7 +42,7 @@ if (empty($moduleComponents)) {
             $out .= "<td>" . htmlspecialchars($component['componentvalue']) . "</td>";
             $out .= "<td>
             <form method='POST' action='entry.php'>
-                <input name='id' type='hidden' value=" . $component['componentid'] . ">
+                <input name='id' type='hidden' value=" . $instance .">
                 <button class='btn btn-sm btn-primary' name='method' value='edit'>Upravit</button>
             </form>
             </td>";
