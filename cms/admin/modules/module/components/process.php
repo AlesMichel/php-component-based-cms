@@ -62,8 +62,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $component->saveComponentData($componentName, $componentData, null, $instance);
             }
         }
-
-
     }else if($action == "deleteData"){
         $instance = $_SESSION['id'];
         $components = $component->getModuleComponents();

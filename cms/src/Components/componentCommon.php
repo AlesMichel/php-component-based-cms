@@ -261,7 +261,7 @@ class componentCommon extends module
     public function deleteComponent($componentName, $isMultilang): bool
     {
         //1. delete component in current table
-        $deleteFromModuleTable = $this->deleteComponentFromModuleTable($componentName);
+        $deleteFromModuleTable = $this->deleteComponentFromModuleTable($componentName, $isMultilang);
         //2. delete component in common module_components
         $deleteFromModuleComponents = $this->deleteComponentFromModuleComponents($componentName, $isMultilang);
         if ($deleteFromModuleTable and $deleteFromModuleComponents) {
@@ -294,12 +294,22 @@ class componentCommon extends module
     }
 
 
-    private function deleteComponentFromModuleTable($componentName): bool
+    private function deleteComponentFromModuleTable($componentName, $isMultilang): bool
     {
+        $success1 = true;
+        $success2 = false;
+
         try {
-            $sql = "ALTER TABLE `$this->tableName` DROP COLUMN `$componentName`";
-            $stmt = $this->db->prepare($sql);
-            return $stmt->execute();
+            $sql1 = "ALTER TABLE `$this->tableName` DROP COLUMN `$componentName`";
+            $this->db->exec($sql1);
+            if ($isMultilang == 1) {
+                $columnNameEn = $componentName . 'EN';
+                $sql2 = "ALTER TABLE `$this->tableName` DROP COLUMN `$columnNameEn`";
+                $this->db->exec($sql2);
+                $success2 = true;
+            }
+            return $success1 && $success2;
+
         } catch (Exception $e) {
             echo "Chyba při mazání sloupce z tabulky $this->tableName: " . $e->getMessage();
             return false;

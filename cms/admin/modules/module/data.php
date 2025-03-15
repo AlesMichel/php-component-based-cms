@@ -24,8 +24,6 @@ if (empty($moduleComponents)) {
     $out .= "</form>";
 
     foreach ($moduleData as $instance => $components) {
-
-//        $out .= "<h6>Instance ID: " . htmlspecialchars($instance) . "</h6>";
         $out .= "<table class='table table-bordered'>";
         $out .= "<thead>
                  <tr>
@@ -47,10 +45,7 @@ if (empty($moduleComponents)) {
             </form>
             </td>";
             $out .= "</tr>";
-
-
         }
-
         $out .= "</tbody>";
         $out .= "</table>";
     }
