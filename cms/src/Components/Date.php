@@ -2,7 +2,7 @@
 
 include_once("TextField.php");
 
-class Position extends TextField
+class Date extends TextField
 {
     public function getDataFieldsForEdit(): string
     {

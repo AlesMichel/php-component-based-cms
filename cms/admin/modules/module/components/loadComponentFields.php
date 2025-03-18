@@ -2,7 +2,8 @@
 
 include_once("../../../../autoload.php");
 
-$db = connect::getInstance()->getConnection();
+
+
 
 // loadComponentFields.php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

@@ -5,7 +5,7 @@ include_once("TextField.php");
 include_once("TextArea.php");
 include_once("Position.php");
 include_once("Image.php");
-
+include_once("Date.php");
 class componentCommon extends module
 {
 
@@ -116,24 +116,22 @@ class componentCommon extends module
         return $out;
     }
 
-    public static function createComponent($componentId): string
+    public static function createComponent(int $componentId): string
     {
-        //new out
-        $out = '';
-        //build field
-        if ($componentId === null) {
-            echo "No component found";
-        } else if ($componentId == 1) {
-            $out .= TextField::getFields();
-        } elseif ($componentId == 2) {
-            $out .= Image::getFields();
-        } elseif ($componentId == 3) {
-            $out .= Position::getFields();
-        } elseif ($componentId == 4) {
-            $out .= TextArea::getFields();
-        }
-        return $out;
+        $path = self::buildPath($componentId);
+        return $path::getFields();
     }
+
+    private static function buildPath(int $id){
+        $sql = "SELECT name FROM components WHERE id = :id";
+        $db = connect::getInstance()->getConnection();
+        $stmt = $db->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetchColumn();
+
+    }
+
+
 
     public function getInsertFields(): string
     {
@@ -144,20 +142,22 @@ class componentCommon extends module
             $getComponentName = $component['name'];
             $getComponentIsMultlang = $component['multilang'];
             $getComponentIsRequired = $component['required'];
-
-            if ($getComponentId == 1) {
-                $textField = new TextField($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                $out .= $textField->getDataFieldsForInsert();
-            } else if ($getComponentId == 2) {
-                $image = new Image($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                $out .= $image->getDataFieldsForInsert();
-            } else if ($getComponentId == 3) {
-                $position = new Position($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                $out .= $position->getDataFieldsForInsert();
-            } else if ($getComponentId == 4) {
-                $textArea = new TextArea($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                $out .= $textArea->getDataFieldsForInsert();
-            }
+            $path = self::buildPath($getComponentId);
+            $component = new $path($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+            $out .= $component->getDataFieldsForInsert();
+//            if ($getComponentId == 1) {
+//                $textField = new TextField($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+//                $out .= $textField->getDataFieldsForInsert();
+//            } else if ($getComponentId == 2) {
+//                $image = new Image($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+//                $out .= $image->getDataFieldsForInsert();
+//            } else if ($getComponentId == 3) {
+//                $position = new Position($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+//                $out .= $position->getDataFieldsForInsert();
+//            } else if ($getComponentId == 4) {
+//                $textArea = new TextArea($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+//                $out .= $textArea->getDataFieldsForInsert();
+//            }
         }
         return $out;
     }
@@ -224,19 +224,11 @@ class componentCommon extends module
                 $getComponentData = $component['data'];
                 $getComponentDataEn = $component['dataEn'];
 
-                if ($getComponentId == 1) {
-                    $textField = new TextField($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang, $getComponentData, $getComponentDataEn);
-                    $out .= $textField->getDataFieldsForEdit();
-                } else if ($getComponentId == 2) {
-                    $image = new Image($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                    $out .= $image->getDataFieldsForEdit();
-                } else if ($getComponentId == 3) {
-                    $position = new Position($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                    $out .= $position->getDataFieldsForEdit();
-                } else if ($getComponentId == 4) {
-                    $textArea = new TextArea($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
-                    $out .= $textArea->getDataFieldsForEdit();
-                }
+                $path = self::buildPath($getComponentId);
+                
+                $component = new $path($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+                $out .= $component->getDataFieldsForEdit($getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang, $getComponentData, $getComponentDataEn);
+
             }
         }
         return $out;

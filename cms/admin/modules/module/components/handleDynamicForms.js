@@ -5,7 +5,7 @@ function handleDynamicForm() {
     xhr.open('POST', 'loadComponentFields.php', true); // Replace with your PHP endpoint
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
+        if (xhr.readyState === 4 && xhr.status === 200) {
             document.getElementById('dynamic-fields').innerHTML = xhr.responseText;
         }
     };
