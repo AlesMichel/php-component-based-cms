@@ -6,6 +6,8 @@ include_once("TextArea.php");
 include_once("Position.php");
 include_once("Image.php");
 include_once("Date.php");
+include_once("Password.php");
+
 class componentCommon extends module
 {
 
@@ -30,13 +32,15 @@ class componentCommon extends module
                 //find module table name from table modules
                 $sql = "INSERT INTO `module_components` (module_id, component_id, name, multilang, required) VALUES (:module_id, :component_id, :name, :multilang, :required)";
                 $stmt = $this->db->prepare($sql);
-                $stmt->execute([
+                if($stmt->execute([
                     ':module_id' => $this->getID(),
                     ':component_id' => $componentId,
                     ':name' => $componentName,
                     ':multilang' => $componentIsMultilang,
                     ':required' => $componentIsRequired
-                ]);
+                ])){
+                    $this->updateModuleTableFields();
+                }
             } catch (PDOException $e) {
                 $result['error'] = "Error fetching table name: " . $e->getMessage();
                 $result['success'] = false;

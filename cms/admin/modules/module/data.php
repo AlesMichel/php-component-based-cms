@@ -35,9 +35,14 @@ if (empty($moduleComponents)) {
         $out .= "<tbody>";
 
         foreach ($components as $component) {
+            $componentId = $component['componentid'];
+            $componentData = $component['componentvalue'];
+            if($componentId == 6){
+                $componentData ='';
+            }
             $out .= "<tr>";
             $out .= "<td>" . htmlspecialchars($component['componentname']) . "</td>";
-            $out .= "<td>" . htmlspecialchars($component['componentvalue']) . "</td>";
+            $out .= "<td>" . $componentData . "</td>";
             $out .= "<td>
             <form method='POST' action='entry.php'>
                 <input name='id' type='hidden' value=" . $instance .">

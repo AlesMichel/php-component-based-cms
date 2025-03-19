@@ -13,7 +13,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $componentIsMultlang = $_POST["component_isMultlang"];
         $componentIsRequired = $_POST["component_isRequired"];
         $component->initComponent($componentName, $componentId,$componentIsMultlang, $componentIsRequired);
-        $component->updateModuleTableFields();
+//        $component->updateModuleTableFields();
     } else if ($action == "update") {
         //update
     } else if ($action == "delete") {
@@ -32,14 +32,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $componentName = $c['name'];
             $componentIsMultlang = $c['multilang'];
             $componentFieldName = "component_$componentName";
+            $componentId = $c['component_id'];
 
-            if ($componentIsMultlang == 1) {
+            if($componentIsMultlang == 1) {
                 $componentData = $_POST[$componentFieldName];
                 $componentDataEn = $_POST[$componentFieldName];
                 $component->saveComponentData($componentName, $componentData, $componentDataEn);
-            } else {
-                $componentFieldName = "component_en_$componentName";
+            }else{
                 $componentData = $_POST[$componentFieldName];
+                //hash pass
+                if($componentId == 6){$componentData = password_hash($componentData, PASSWORD_BCRYPT);}
                 $component->saveComponentData($componentName, $componentData, null);
             }
         }
@@ -51,14 +53,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $componentIsMultlang = $c['multilang'];
             $componentFieldName = "component_$componentName";
             $componentFieldNameEN = "component_en_$componentName";
+            $componentId = $c['component_id'];
 
             if ($componentIsMultlang == 1) {
                 $componentData = $_POST[$componentFieldName];
                 $componentDataEn = $_POST[$componentFieldName];
                 $component->saveComponentData($componentName, $componentData, $componentDataEn, $instance);
             } else {
-                $componentFieldName = "component_en_$componentName";
                 $componentData = $_POST[$componentFieldName];
+                if($componentId == 6){$componentData = password_hash($componentData, PASSWORD_BCRYPT);
+                }
                 $component->saveComponentData($componentName, $componentData, null, $instance);
             }
         }

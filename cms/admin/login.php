@@ -1,21 +1,37 @@
 <?php
 require_once('../config.php');
+include_once("../../cms/src/Database/connect.php");
 
 
-if(isset($_POST['login'])){
+if (isset($_POST['login'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    if($username == LOGIN && $password == PASS){
+    // Připojení k databázi
+    $db = connect::getInstance()->getConnection();
+
+    // Připravený SQL dotaz pro bezpečné načtení uživatele
+    $sql = "SELECT * FROM usersdb WHERE login = :login LIMIT 1";
+    $stmt = $db->prepare($sql);
+    $stmt->bindParam(':login', $username, PDO::PARAM_STR);
+    $stmt->execute();
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user && password_verify($password, $user['pass'])) {
+        // Přihlášení uživatele
         session_start();
-        $_SESSION["user"] = "admin";
-        header("Location:modules/index.php");
-    }else{
+        $_SESSION["user"] = $user['login'];
+
+        // Přesměrování
+        header("Location: modules/index.php");
+        exit();
+    } else {
         echo '<div class="alert alert-danger mt-3" role="alert">
            Špatné uživatelské jméno nebo heslo.
         </div>';
     }
 }
+
 ?>
 
 <!doctype html>
