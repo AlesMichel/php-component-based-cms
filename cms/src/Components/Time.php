@@ -1,14 +1,15 @@
 <?php
 
 
-class Date extends TextField
+class Time extends TextField
 {
     public static function getFields(): string
     {
         return "
         <label for='textField' class='form-label mt-3'>Název komponenty</label>
         <input class='form-control' type='text' id='textField' name='component_name' placeholder='...' required/>
-        <input type='hidden' id='component_id' value='5' name='component_id'>
+        
+        <input type='hidden' id='component_id' value='7' name='component_id' >
         <div class='mt-3'>
             <div class='form-check form-switch'>
             <input type='hidden' name='component_isRequired' value='0'>
@@ -47,13 +48,13 @@ class Date extends TextField
         $out = '';
         if ($this->componentIsMultlang === 1) {
             $out .= "<label for='position_" . $this->componentName . "' class='form-label mt-2 mb-1'>" . $this->componentName . " CZ</label>";
-            $out .= "<input class='form-control' type='date' id='position_" . $this->componentName . "' value='' name='component_" . $this->componentName . "' " . ($this->componentIsRequired ? 'required' : '') . " />";
+            $out .= "<input class='form-control' type='time' id='position_" . $this->componentName . "' value='' name='component_" . $this->componentName . "' " . ($this->componentIsRequired ? 'required' : '') . " />";
 
             $out .= "<label for='position_" . $this->componentName . "_en' class='form-label mt-2 mb-1'>" . $this->componentName . " EN</label>";
-            $out .= "<input class='form-control' type='date' id='position_" . $this->componentName . "_en' value='' name='component_en_" . $this->componentName . "' " . ($this->componentIsRequired ? 'required' : '') . " />";
+            $out .= "<input class='form-control' type='time' id='position_" . $this->componentName . "_en' value='' name='component_en_" . $this->componentName . "' " . ($this->componentIsRequired ? 'required' : '') . " />";
         } else {
             $out .= "<label for='position_" . $this->componentName . "' class='form-label mt-2 mb-1'>" . $this->componentName . "</label>";
-            $out .= "<input class='form-control' type='date' id='position_" . $this->componentName . "' value='' name='component_" . $this->componentName . "' " . ($this->componentIsRequired ? 'required' : '') . " />";
+            $out .= "<input class='form-control' type='time' id='position_" . $this->componentName . "' value='' name='component_" . $this->componentName . "' " . ($this->componentIsRequired ? 'required' : '') . " />";
         }
         return $out;
     }

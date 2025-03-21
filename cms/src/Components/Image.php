@@ -27,7 +27,7 @@ class Image
         return "
         <label for='textField' class='form-label mt-3'>Název komponenty</label>
         <input class='form-control' type='text' id='textField' name='component_name' placeholder='...' required/>
-        
+        <input type='hidden' id='component_id' value='4' name='component_id'>
         <div class='mt-3'>
             <div class='form-check form-switch'>
             <input type='hidden' name='component_isRequired' value='0'>
@@ -64,13 +64,9 @@ class Image
         }
     }
 
-    public static function uploadImage($src): array
+    public static function uploadImage($src): string
     {
-        $result = [
-            'success' => false,
-            'data' => null,
-            'error' => null,
-        ];
+
         //uploads image to uploads
         //first as ChatGPT said explode the tag
         if($src){
@@ -85,18 +81,11 @@ class Image
             // Convert the image to WebP and save it
             if (imagewebp($image, $webpFileName)) {
                 echo "Image successfully converted to WebP and saved as $webpFileName";
-                $result['data'] = $webpFileName;
-                $result['success'] = true;
-            } else {
-                $result['error'] = 'Failed to convert and save the image.';
-            }
+                $result = $webpFileName;
 
+            }
             // Free up memory
             imagedestroy($image);
-
-        }else{
-            $result['success'] = false;
-            $result['error'] = "Haven't received the image data";
         }
 
         return $result;

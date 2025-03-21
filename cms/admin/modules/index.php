@@ -22,7 +22,7 @@ while($data = $stmtSelect->fetch(PDO::FETCH_ASSOC)){
 
     $out .= "<tr>
             <td>" . $data['module_name'] . "</td>
-            <td>" . $data['module_name'] . "</td>
+            <td>" . $data['module_table'] . "</td>
             <td>
                 <form method='post' action=''>
                 <a class='btn btn-primary' href='module/data.php?module_name=" . $data['module_name'] . "'>View</a>

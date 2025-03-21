@@ -7,6 +7,7 @@ include_once("Position.php");
 include_once("Image.php");
 include_once("Date.php");
 include_once("Password.php");
+include_once("Time.php");
 
 class componentCommon extends module
 {
@@ -134,8 +135,6 @@ class componentCommon extends module
         return $stmt->fetchColumn();
 
     }
-
-
 
     public function getInsertFields(): string
     {

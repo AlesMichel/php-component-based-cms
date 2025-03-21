@@ -1,5 +1,6 @@
 <?php
 include_once("../../../../autoload.php");
+include_once("../../../../src/Components/Image.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $moduleName = $_SESSION["module_name"];
@@ -42,6 +43,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $componentData = $_POST[$componentFieldName];
                 //hash pass
                 if($componentId == 6){$componentData = password_hash($componentData, PASSWORD_BCRYPT);}
+                //handle image
+                if($componentId == 4){
+
+                    echo Image::uploadImage($componentData);
+                    $componentData = '';
+//
+//                    $componentData = Image::uploadImage($componentData);
+//                    echo $componentData;
+                }
                 $component->saveComponentData($componentName, $componentData, null);
             }
         }

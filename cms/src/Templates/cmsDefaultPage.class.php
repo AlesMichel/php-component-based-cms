@@ -139,6 +139,7 @@ class cmsDefaultPage
     {
 
         //get scripts
-        return '<script src="' . ABS_URL . '/templates/defaultPage.js"></script>';
+//        return '<script src="' . ABS_URL . '/src/Templates/defaultPage.js"></script>';
+       return "";
     }
 }

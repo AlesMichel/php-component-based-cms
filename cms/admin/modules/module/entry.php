@@ -24,6 +24,10 @@ if($_SERVER ['REQUEST_METHOD'] == 'POST'){
     }
 }
 
+$out .= '<script src="../../../src/Components/handleImageUpload.js"></script>';
+$out .= '<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>';
+
 
 $buildPage = new cmsDefaultPage($out);
 $buildPage->buildLayout();
