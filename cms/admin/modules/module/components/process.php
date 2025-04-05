@@ -14,21 +14,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $componentIsMultlang = $_POST["component_isMultlang"];
         $componentIsRequired = $_POST["component_isRequired"];
         $component->initComponent($componentName, $componentId,$componentIsMultlang, $componentIsRequired);
-//        $component->updateModuleTableFields();
+        $component->updateModuleTableFields();
     } else if ($action == "update") {
         //update
     } else if ($action == "delete") {
         $componentName = $_POST["component_name"];
-        $componentIsMultlang = $_POST["component_isMultlang"];
+        $componentIsMultlang = $_POST["component_isMultlang"] ?? 0;
         $success = $component->deleteComponent($componentName, $componentIsMultlang);
         if ($success) {
             $_SESSION["cms_message"] = "Komponenta byla smazana";
             header("location: ../index.php");
         }
+    }else if($action == "addOption"){
+        $componentName = $_POST["component_name"];
+        $newOption = $_POST['newOption'];
+        $newOptionEn = $_POST['newOptionEn'] ?? null;
+        echo $componentName, $newOptionEn, $newOption;
+        if(!empty($newOption)){
+            $component->insertOption($componentName, $newOption, $newOptionEn);
+        }
     }
+
     //actions for data management
     else if ($action == "insert") {
         $components = $component->getModuleComponents();
+        var_dump($components);
         foreach ($components as $c) {
             $componentName = $c['name'];
             $componentIsMultlang = $c['multilang'];
@@ -36,8 +46,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $componentId = $c['component_id'];
 
             if($componentIsMultlang == 1) {
-                $componentData = $_POST[$componentFieldName];
-                $componentDataEn = $_POST[$componentFieldName];
+                $componentData = $_POST[$componentFieldName] ?? null;
+                $componentDataEn = $_POST[$componentFieldName] ?? null;
                 $component->saveComponentData($componentName, $componentData, $componentDataEn);
             }else{
                 $componentData = $_POST[$componentFieldName];
@@ -45,15 +55,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if($componentId == 6){$componentData = password_hash($componentData, PASSWORD_BCRYPT);}
                 //handle image
                 if($componentId == 4){
-
-                    echo Image::uploadImage($componentData);
+                    Image::uploadImage($componentData);
                     $componentData = '';
-//
-//                    $componentData = Image::uploadImage($componentData);
+                   $componentData = Image::uploadImage($componentData);
 //                    echo $componentData;
                 }
                 $component->saveComponentData($componentName, $componentData, null);
             }
+            header("location: ../../index.php");
         }
     }else if($action == "updateData"){
         $instance = $_SESSION['id'];
@@ -67,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if ($componentIsMultlang == 1) {
                 $componentData = $_POST[$componentFieldName];
-                $componentDataEn = $_POST[$componentFieldName];
+                $componentDataEn = $_POST[$componentFieldNameEN];
                 $component->saveComponentData($componentName, $componentData, $componentDataEn, $instance);
             } else {
                 $componentData = $_POST[$componentFieldName];
@@ -75,6 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
                 $component->saveComponentData($componentName, $componentData, null, $instance);
             }
+            header("location: ../../index.php");
         }
     }else if($action == "deleteData"){
         $instance = $_SESSION['id'];
@@ -83,6 +93,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $componentName = $c['name'];
             $component->deleteComponentData($instance);
         }
+        header("location: ../../index.php");
 
     }
 

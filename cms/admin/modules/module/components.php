@@ -10,7 +10,6 @@ $moduleComponents = $module->getModuleComponents();
 $moduleData = $module->getModuleDataForAdmin();
 $moduleId = $module->getID();
 
-
 ///  //print navigaton
 $out .= cmsDefaultPage::buildNavTabs($moduleName);
 $addComponentForm = "<form method='POST' action='components/create.php'>

@@ -3,11 +3,13 @@ include_once("../../../autoload.php");
 $out = '';
 
 $moduleName = $_GET["module_name"];
-$module = new Module($moduleName);
+$module = new componentCommon($moduleName);
 $_SESSION["module_name"] = $moduleName;
 $out .= cmsDefaultPage::buildNavTabs($moduleName);
 $moduleData = $module->getModuleDataForAdmin();
 $moduleComponents = $module->getModuleComponents();
+
+
 
 if (empty($moduleComponents)) {
     $out .= "<p>No components found for this module.</p>";
@@ -35,13 +37,13 @@ if (empty($moduleComponents)) {
         $out .= "<tbody>";
 
         foreach ($components as $component) {
-            $componentId = $component['componentid'];
-            $componentData = $component['componentvalue'];
+            $componentId = $component['id'];
+            $componentData = $component['data'];
             if($componentId == 6){
                 $componentData ='';
             }
             $out .= "<tr>";
-            $out .= "<td>" . htmlspecialchars($component['componentname']) . "</td>";
+            $out .= "<td>" . htmlspecialchars($component['name']) . "</td>";
             $out .= "<td>" . $componentData . "</td>";
             $out .= "<td>
             <form method='POST' action='entry.php'>

@@ -1,33 +1,14 @@
 <?php
-
-class Image
+include_once("component.php");
+class Image extends component
 {
-    protected string $componentName;
-    protected int $componentId;
-    protected int $componentIsRequired;
-    protected int $componentIsMultlang;
-    protected string $componentData = '';
-    protected string $componentDataEn = '';
 
-    public function __construct($componentName, $componentId, int $componentIsRequired, int $componentIsMultlang, $componentData = null, $componentDataEN = null) {
-        $this->componentName = $componentName;
-        $this->componentId = $componentId;
-        $this->componentIsRequired = $componentIsRequired;
-        $this->componentIsMultlang = $componentIsMultlang;
-        if($componentData !== null){
-            $this->componentData = $componentData;
-        }
-        if($componentDataEN !== null){
-            $this->componentDataEn = $componentDataEN;
-        }
-    }
-
-    public static function getFields(): string
+    public static function getFields($componentId): string
     {
         return "
         <label for='textField' class='form-label mt-3'>Název komponenty</label>
         <input class='form-control' type='text' id='textField' name='component_name' placeholder='...' required/>
-        <input type='hidden' id='component_id' value='4' name='component_id'>
+        <input type='hidden' id='component_id' value=".$componentId." name='component_id'>
         <div class='mt-3'>
             <div class='form-check form-switch'>
             <input type='hidden' name='component_isRequired' value='0'>

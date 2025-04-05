@@ -1,8 +1,6 @@
 <?php
-
-include_once("TextField.php");
-
-class TextArea extends TextField
+include_once("component.php");
+class TextArea extends component
 {
     public function getDataFieldsForEdit(): string
     {

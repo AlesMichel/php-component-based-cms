@@ -130,6 +130,7 @@ class Module
             $insertName = $this->addModuleToCommonTable();
             $insertTable = $this->addModuleToDB();
 
+
             if($insertTable['success'] === true && $insertName['success'] === true){
                 $result['success'] = true;
             }else{
@@ -225,7 +226,7 @@ class Module
             //table does not exist, proceed to creating new table
             //create id, columns for components
             $sql = "CREATE TABLE IF NOT EXISTS `$this->tableName` (
-                id INT(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY
+                    id INT(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY
                 )";
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
@@ -264,7 +265,6 @@ class Module
         }
     }
 
-
     public function getModuleComponents(): false|array
     {
         $sql = "SELECT * FROM `module_components` WHERE module_id= :id";
@@ -281,11 +281,12 @@ class Module
 
             $componentName = $component['name'];
             $multilang = $component['multilang'];
+
             $exists = $this->componentIncluded($componentName);
+
             if (!$exists) {
                 try {
                     $columnType = $this->getComponentColumn($component['component_id']);
-
                     if($multilang == 1){
                         $sql = "ALTER TABLE `$this->tableName` 
                             ADD COLUMN `$componentName` $columnType, 
@@ -336,7 +337,6 @@ class Module
     {
         $moduleComponents = $this->getModuleComponents();
         $moduleData = $this->getModuleData();
-
         $newArray = [];
 
         // Loop through the module data
