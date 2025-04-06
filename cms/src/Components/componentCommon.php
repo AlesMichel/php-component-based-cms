@@ -12,10 +12,14 @@ include_once("SelectBox.php");
 
 class componentCommon extends module
 {
-
     public function __construct($name)
     {
         parent::__construct($name, null);
+    }
+
+    public function getLastInsertId(): int {
+        $lastInsertId = (int) $this->db->lastInsertId();
+        return $lastInsertId > 0 ? $lastInsertId : 1;
     }
 
     public function initComponent($componentName, $componentId, $componentIsMultilang, $componentIsRequired): array
@@ -100,10 +104,10 @@ class componentCommon extends module
 
             // Exekuujeme dotaz s hodnotami z funkce
             $stmt->execute([
-                "moduleId" => $this->moduleId, // Dej si pozor na to, jestli 'moduleId' je definované v tvé třídě
-                "componentName" => $componentName, // Použijeme název komponenty
-                "componentValue" => $optionValue, // Hodnota pro komponentu
-                "optionValueEn" => $optionValueEn // Hodnota pro anglickou variantu
+                "moduleId" => $this->moduleId,
+                "componentName" => $componentName,
+                "componentValue" => $optionValue,
+                "optionValueEn" => $optionValueEn
             ]);
 
             return true;
@@ -111,7 +115,6 @@ class componentCommon extends module
             return false;
         }
     }
-
 
 
     public static function fetchAllComponents($db)
@@ -155,15 +158,15 @@ class componentCommon extends module
     {
         $path = self::buildPath($componentId);
         return $path::getFields($componentId);
+
     }
 
-    private static function buildPath(int $id){
+    public static function buildPath(int $id){
         $sql = "SELECT name FROM components WHERE id = :id";
         $db = connect::getInstance()->getConnection();
         $stmt = $db->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetchColumn();
-
     }
 
     public function getInsertFields(): string
@@ -180,6 +183,66 @@ class componentCommon extends module
                 $out .= $component->getDataFieldsForInsert();
         }
         return $out;
+    }
+
+    public function getModuleComponentsObjects():array{
+        $components = [];
+        foreach ($this->getModuleComponents() as $component) {
+            $getComponentId = $component['component_id'];
+            $getComponentName = $component['name'];
+            $getComponentIsMultlang = $component['multilang'];
+            $getComponentIsRequired = $component['required'];
+            $path = self::buildPath($getComponentId);
+            $componentObject = new $path($this->moduleName,$getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang);
+            $components[] = $componentObject;
+        }
+        return $components;
+
+    }
+
+    public function getModuleDataForAdminObjects(): array
+    {
+        $moduleComponents = $this->getModuleComponents();
+        $moduleData = $this->getModuleData();
+
+        $newArray = [];
+
+        // Loop through the module data
+        foreach ($moduleData as $row) {
+            $id = $row['id']; // Get the ID from the module data
+            if (!isset($newArray[$id])) {
+                // Initialize the entry for this ID if it doesn't exist yet
+                $newArray[$id] = [];
+            }
+
+            // Loop through the module components
+            foreach ($moduleComponents as $component) {
+                $getComponentId = $component['component_id'];
+                $getComponentName = $component['name'];
+                $getComponentIsMultlang = $component['multilang'];
+                $getComponentIsRequired = $component['required'];
+                $getData = $row[$getComponentName] ?? null;
+                $getDataEn = null;
+                if ($getComponentIsMultlang == 1) {
+                    $enFieldName = $getComponentName . 'EN';
+                    $getDataEn = $row[$enFieldName] ?? null;
+                }
+                $path = self::buildPath($getComponentId);
+                // Create the component object
+                $componentObject = new $path(
+                    $this->moduleName,
+                    $getComponentName,
+                    $getComponentId,
+                    $getComponentIsRequired,
+                    $getComponentIsMultlang,
+                    $getData,
+                    $getDataEn
+                );
+                $newArray[$id][] = ['componentObject' => $componentObject] ;
+            }
+        }
+
+        return $newArray;
     }
 
     public function getModuleDataForAdminForInstance($instance): array
@@ -227,11 +290,67 @@ class componentCommon extends module
 
         return $newArray;
     }
+
+    public function getModuleDataForAdminForInstanceObjects($instance): array
+    {
+        $moduleComponents = $this->getModuleComponents();
+        $moduleData = $this->getModuleData();
+        $newArray = [];
+
+        foreach ($moduleData as $row) {
+            $id = $row['id'];
+
+            if ((int)$id !== (int)$instance) {
+                continue;
+            }
+
+            if (!isset($newArray[$id])) {
+                $newArray[$id] = [];
+            }
+
+            foreach ($moduleComponents as $component) {
+                $name = $component['name'] ?? ''; // Default value
+                $data = $row[$name] ?? null;
+                $componentId = $component['component_id'] ?? null;
+                $multilang = $component["multilang"] ?? 0;
+                $required = $component["required"] ?? 0;
+                $dataEn = null;
+
+                if ($multilang == 1) {
+                    $enFieldName = $name . 'EN';
+                    $dataEn = $row[$enFieldName] ?? null;
+                }
+
+                // Create the component object instead of just the data array
+                $path = self::buildPath($componentId);
+                $componentObject = new $path(
+                    $this->moduleName,
+                    $name,
+                    $componentId,
+                    $required,
+                    $multilang,
+                    $data,
+                    $dataEn
+                );
+
+                // Store the component object in the array
+                $newArray[$id][] = [
+                    "componentObject" => $componentObject, // Store the object
+                    "id" => $componentId,
+                    "multilang" => $multilang,
+                    "required" => $required
+                ];
+            }
+        }
+
+        return $newArray;
+    }
+
+
     public function getEditFields($instance): string
     {
         $out = '';
         $data = $this->getModuleDataForAdminForInstance($instance);
-        var_dump($data);
         foreach ($data as $row) {
             foreach ($row as $component) {
                 $getComponentId = $component['id'];
@@ -297,6 +416,12 @@ class componentCommon extends module
 
         return $newArray;
     }
+
+
+
+
+
+
     public function getModuleDataForInstance($instance)
     {
         $sql = "SELECT * FROM $this->tableName WHERE `id` = :id";
@@ -371,72 +496,64 @@ class componentCommon extends module
         }
     }
 
-    public function saveComponentData($componentName, $componentData, $componentDataEn = null, $instance = null): bool
-    {
-        try {
-            $columnNameEn = $componentName . 'EN';
-            if ($instance !== null) {
-                $sql = "UPDATE `$this->tableName` 
+    protected function getColumnNameEn($componentName): string{
+        return $componentName . 'EN';
+    }
+
+    public function updateComponentData($componentName,$instance,$componentData, $componentDataEn = null):bool{
+        $columnNameEn = $this->getColumnNameEn($componentName);
+        try{
+            $sql = "UPDATE `$this->tableName` 
                     SET `$componentName` = :componentData"
-                    . ($componentDataEn !== null ? ", `$columnNameEn` = :componentDataEn" : "") . " 
+                . ($componentDataEn !== null ? ", `$columnNameEn` = :componentDataEn" : "") . " 
                     WHERE `id` = :instance";
-                $stmt = $this->db->prepare($sql);
-                $params = [':instance' => $instance, ':componentData' => $componentData];
-                if ($componentDataEn !== null) {
-                    $params[':componentDataEn'] = $componentDataEn;
-                }
-                return $stmt->execute($params);
-            } else {
-
-                if($this->entryExitst($instance)){
-                    // Pokud záznam existuje, provede se UPDATE
-                    $sql = "UPDATE `$this->tableName` 
-                        SET `$componentName` = :componentData"
-                        . ($componentDataEn !== null ? ", `$columnNameEn` = :componentDataEn" : "") . " 
-                        WHERE `id` = :instance";
-                    $stmt = $this->db->prepare($sql);
-                    $params = [':instance' => $instance, ':componentData' => $componentData];
-                    if ($componentDataEn !== null) {
-                        $params[':componentDataEn'] = $componentDataEn;
-                    }
-                    return $stmt->execute($params);
-                }else{
-                    // Pokud záznam neexistuje, vložíme nový
-                    $sql = "INSERT INTO `$this->tableName` (`id`, `$componentName`"
-                        . ($componentDataEn !== null ? ", `$columnNameEn`" : "") . ") 
-                    VALUES (NULL, :componentData"
-                        . ($componentDataEn !== null ? ", :componentDataEn" : "") . ")";
-                    $stmt = $this->db->prepare($sql);
-                    $params = [':componentData' => $componentData];
-                    if ($componentDataEn !== null) {
-                        $params[':componentDataEn'] = $componentDataEn;
-                    }
-                    return $stmt->execute($params);
-                }
-
-                // INSERT s ID nastaveným automaticky
-                $sql = "INSERT INTO `$this->tableName` (`id`, `$componentName`"
-                    . ($componentDataEn !== null ? ", `$columnNameEn`" : "") . ") 
-                    VALUES (NULL, :componentData"
-                    . ($componentDataEn !== null ? ", :componentDataEn" : "") . ")";
-                $stmt = $this->db->prepare($sql);
-                $params = [':componentData' => $componentData];
-                if ($componentDataEn !== null) {
-                    $params[':componentDataEn'] = $componentDataEn;
-                }
-                return $stmt->execute($params);
+            $stmt = $this->db->prepare($sql);
+            $params = [':instance' => $instance, ':componentData' => $componentData];
+            if ($componentDataEn !== null) {
+                $params[':componentDataEn'] = $componentDataEn;
             }
+            return $stmt->execute($params);
+        }catch (Exception $e) {
+            echo "Chyba: " . $e->getMessage();
+            return false;
+        }
+    }
+
+    public function insertComponentData($componentName, $instance, $componentData, $componentDataEn = null): bool
+    {
+        $columnNameEn = $this->getColumnNameEn($componentName);
+        $hasEnColumn = $this->columnExists($columnNameEn);
+        $useMultilang = $componentDataEn !== null && $hasEnColumn;
+
+        try {
+            $sql = "INSERT INTO `$this->tableName` (`id`, `$componentName`";
+            $sql .= $useMultilang ? ", `$columnNameEn`" : "";
+            $sql .= ") VALUES (:instance, :componentData";
+            $sql .= $useMultilang ? ", :componentDataEn" : "";
+            $sql .= ") ON DUPLICATE KEY UPDATE `$componentName` = :componentData";
+            $sql .= $useMultilang ? ", `$columnNameEn` = :componentDataEn" : "";
+
+            $stmt = $this->db->prepare($sql);
+            $params = [
+                ':instance' => $instance,
+                ':componentData' => $componentData
+            ];
+
+            if ($useMultilang) {
+                $params[':componentDataEn'] = $componentDataEn;
+            }
+
+            return $stmt->execute($params);
         } catch (Exception $e) {
             echo "Chyba: " . $e->getMessage();
             return false;
         }
     }
 
-    private function entryExitst($instance){
-        $sqlCheck = "SELECT COUNT(*) FROM `$this->tableName` WHERE `id` = :id";
-        $stmtCheck = $this->db->prepare($sqlCheck);
-        $stmtCheck->execute([':id' => $instance]);
-        return $stmtCheck->fetchColumn() > 0;
+    protected function columnExists(string $column): bool {
+        $stmt = $this->db->prepare("SHOW COLUMNS FROM `$this->tableName` LIKE :column");
+        $stmt->execute([':column' => $column]);
+        return $stmt->fetch() !== false;
     }
 
     public function deleteComponentData($instance): bool
@@ -449,6 +566,60 @@ class componentCommon extends module
             echo "Chyba: " . $e->getMessage();
             return false;
         }
+    }
+
+    public function updateModuleTableFields(): string
+    {
+        $message = '';
+        $components = $this->getModuleComponentsObjects();
+        foreach ($components as $component) {
+            $componentName = $component->getComponentName();
+            $multilang = $component->getComponentIsMultlang();
+            $exists = $this->componentIncluded($componentName);
+            if (!$exists) {
+                try {
+                    $columnType = $this->getComponentColumn($component->getComponentId());
+                    if($multilang == 1){
+                        $sql = "ALTER TABLE `$this->tableName` 
+                            ADD COLUMN `$componentName` $columnType, 
+                            ADD COLUMN `{$componentName}EN` $columnType";
+                    }else{
+                        $sql = "ALTER TABLE `$this->tableName` ADD COLUMN `$componentName` $columnType";
+                    }
+                    $stmt = $this->db->prepare($sql);
+                    $stmt->execute();
+                    $message .= "Sloupec `$componentName` byl úspěšně přidán jako `$columnType`.<br>";
+                } catch (PDOException $e) {
+                    $message .= "Chyba při přidávání sloupce `$componentName`: " . $e->getMessage() . "<br>";
+                }
+            }
+        }
+        return $message;
+    }
+
+    //rozhodit do component
+    public function getComponentColumn($componentId) {
+        return match ($componentId) {
+            1 => 'VARCHAR(255)',
+            2 => 'TEXT',
+            3 => 'INT(11)',
+            'image' => 'LONGBLOB',
+            4 => 'VARCHAR(255)',
+            5 => 'DATE',
+            default => 'VARCHAR(255)',
+        };
+    }
+
+    /**
+     * @return bool
+     * Check if column for this component is already included in current module table
+     */
+    private function componentIncluded($componentName)
+    {
+        $sql = "SHOW COLUMNS FROM `$this->tableName` LIKE :column";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['column' => $componentName]);
+        return (bool) $stmt->fetch();
     }
 
 }

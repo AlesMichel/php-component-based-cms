@@ -3,6 +3,23 @@ include_once("component.php");
 class Image extends component
 {
 
+//    public function __construct($moduleName, $componentName, $componentId, int $componentIsRequired, int $componentIsMultlang, $componentData = null, $componentDataEN = null){
+//        $this->componentName = $componentName;
+//        $this->componentId = $componentId;
+//        $this->componentIsRequired = $componentIsRequired;
+//        $this->componentIsMultlang = $componentIsMultlang;
+//        $this->componentData = $componentData;
+//        $this->componentDataEn = $componentDataEN;
+//        parent::__construct($moduleName);
+//    }
+
+    public function __construct (...$args){
+        parent::__construct(...$args);
+//        if(!empty($this->componentData)){
+//            self::uploadImage($this->componentData);
+//        }
+    }
+
     public static function getFields($componentId): string
     {
         return "
@@ -20,7 +37,7 @@ class Image extends component
         <div class='my-3'>
             <div class='form-check form-switch'>
             <input type='hidden' name='component_isMultlang' value='0'>
-            <input name='component_isMultlang' class='form-check-input' type='checkbox' id='isMultilang' checked value='1'/>
+            <input name='' class='form-check-input' type='checkbox' id='isMultilang' disabled  value='0'/>
             <label class='form-check-label' for='isMultilang'>Komponenta je vícejazyčná</label>
             </div>
         </div>
@@ -55,7 +72,7 @@ class Image extends component
             //nice got the path
             //now decode the image
             $decodedImage = base64_decode($imageData);
-            $webpFileName = 'C:/xampp/htdocs/cms/admin/uploads/image_' . time() . '.webp';
+            $webpFileName = 'C:/xampp/htdocs/cms/cms/uploads/image_' . time() . '.webp';
 //            $webpFileName = ABS_URL. 'C:/xampp/htdocs/cms/admin/uploads/image_' . time() . '.webp';
             $image = imagecreatefromstring($decodedImage);
 
@@ -105,7 +122,9 @@ class Image extends component
         $out .= '<button class="btn btn-primary mt-3 d-none" id="cropBtn' . $this->componentName . '">Použít</button>';
         $out .= "<input class='d-none' type='text' id='dataPassImg" . $this->componentName . "' value='" . $this->componentData . "' name='component_" . $this->componentName . "' />";
         $out .= "<input onchange='handleImageUpload(this, \"" . $this->componentName . "\")' type='file' name='input_" . $this->componentName . "' class='form-control mt-3' id='image" . $this->componentName . "' accept='image/png, image/gif, image/jpeg, image/webp' />";
-
         return $out;
+
     }
+    public function getDataFormated(): array{return [$this->componentData, $this->componentDataEn];}
+
 }

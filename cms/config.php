@@ -8,5 +8,5 @@ const LOGIN = "admin";
 const PASS = "admin";
 const DBHOST = "127.0.0.1";
 const DBUSER = "root";
-const DBPASS = "";
-const DBNAME = "cms01";
+const DBPASS = "alesm";
+const DBNAME = "cms";

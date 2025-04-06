@@ -34,36 +34,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $component->insertOption($componentName, $newOption, $newOptionEn);
         }
     }
-
     //actions for data management
     else if ($action == "insert") {
         $components = $component->getModuleComponents();
-        var_dump($components);
+        $instance = $component->getHighestInstance() + 1;
         foreach ($components as $c) {
-            $componentName = $c['name'];
-            $componentIsMultlang = $c['multilang'];
-            $componentFieldName = "component_$componentName";
-            $componentId = $c['component_id'];
 
-            if($componentIsMultlang == 1) {
-                $componentData = $_POST[$componentFieldName] ?? null;
-                $componentDataEn = $_POST[$componentFieldName] ?? null;
-                $component->saveComponentData($componentName, $componentData, $componentDataEn);
-            }else{
-                $componentData = $_POST[$componentFieldName];
-                //hash pass
-                if($componentId == 6){$componentData = password_hash($componentData, PASSWORD_BCRYPT);}
-                //handle image
-                if($componentId == 4){
-                    Image::uploadImage($componentData);
-                    $componentData = '';
-                   $componentData = Image::uploadImage($componentData);
-//                    echo $componentData;
-                }
-                $component->saveComponentData($componentName, $componentData, null);
+            $getComponentName = $c['name'];
+            $componentFieldName = "component_$getComponentName";
+            $getComponentId = $c['component_id'];
+            $getComponentIsMultlang = $c['multilang'];
+            $getComponentIsRequired = $c['required'];
+            $componentFieldNameEN = "component_en_$getComponentName";
+            $getComponentData = $_POST[$componentFieldName] ?? null;
+            $getComponentDataEn = $_POST[$componentFieldNameEN] ?? null;
+
+                $path = componentCommon::buildPath($getComponentId);
+                $moduleName = $component->getName();
+                $component = new $path($moduleName,$getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang, $getComponentData, $getComponentDataEn);
+                  $component->insertComponentData($getComponentName, $instance,
+                    $componentData = $component->getDataFormated()[0],
+                    $componentData = $component->getDataFormated()[1]
+                );
+
             }
-            header("location: ../../index.php");
-        }
+        header("location: ../../index.php");
     }else if($action == "updateData"){
         $instance = $_SESSION['id'];
         $components = $component->getModuleComponents();
@@ -77,12 +72,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($componentIsMultlang == 1) {
                 $componentData = $_POST[$componentFieldName];
                 $componentDataEn = $_POST[$componentFieldNameEN];
-                $component->saveComponentData($componentName, $componentData, $componentDataEn, $instance);
+                $component->updateComponentData($componentName, $instance,$componentData, $componentDataEn);
             } else {
                 $componentData = $_POST[$componentFieldName];
                 if($componentId == 6){$componentData = password_hash($componentData, PASSWORD_BCRYPT);
                 }
-                $component->saveComponentData($componentName, $componentData, null, $instance);
+                $component->updateComponentData($componentName, $instance,$componentData, null);
             }
             header("location: ../../index.php");
         }

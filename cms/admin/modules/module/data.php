@@ -1,15 +1,12 @@
 <?php
 include_once("../../../autoload.php");
 $out = '';
-
 $moduleName = $_GET["module_name"];
 $module = new componentCommon($moduleName);
 $_SESSION["module_name"] = $moduleName;
 $out .= cmsDefaultPage::buildNavTabs($moduleName);
-$moduleData = $module->getModuleDataForAdmin();
+$moduleData = $module->getModuleDataForAdminObjects();
 $moduleComponents = $module->getModuleComponents();
-
-
 
 if (empty($moduleComponents)) {
     $out .= "<p>No components found for this module.</p>";
@@ -25,37 +22,34 @@ if (empty($moduleComponents)) {
     $out .= "<button name='method' class='btn btn-primary btn-sm my-3' value='add' type='submit'>Přidat nový záznam</button>";
     $out .= "</form>";
 
-    foreach ($moduleData as $instance => $components) {
+    foreach ($moduleData as $instance => $dataSet) {
         $out .= "<table class='table table-bordered'>";
         $out .= "<thead>
-                 <tr>
-                    <th>Název komponenty</th>
-                    <th>Hodnota komponenty</th>
-                    <th>Akce</th>
-                 </tr>
-             </thead>";
+             <tr>
+                <th>Název komponenty</th>
+                <th>Hodnota komponenty</th>
+                <th>Akce</th>
+             </tr>
+         </thead>";
         $out .= "<tbody>";
 
-        foreach ($components as $component) {
-            $componentId = $component['id'];
-            $componentData = $component['data'];
-            if($componentId == 6){
-                $componentData ='';
-            }
-            $out .= "<tr>";
-            $out .= "<td>" . htmlspecialchars($component['name']) . "</td>";
-            $out .= "<td>" . $componentData . "</td>";
-            $out .= "<td>
+        foreach ($dataSet as $componentArray) {
+               $component = $componentArray['componentObject'];
+                $out .= "<tr>";
+                $out .= "<td>" . $component->getComponentName() . "</td>";
+                $out .= "<td>" . $component->getComponentData() . "</td>";
+                $out .= "<td>
             <form method='POST' action='entry.php'>
-                <input name='id' type='hidden' value=" . $instance .">
+                <input name='id' type='hidden' value='" . htmlspecialchars($instance) . "'>
                 <button class='btn btn-sm btn-primary' name='method' value='edit'>Upravit</button>
             </form>
             </td>";
-            $out .= "</tr>";
+                $out .= "</tr>";
+
+            }
+            $out .= "</tbody>";
+            $out .= "</table>";
         }
-        $out .= "</tbody>";
-        $out .= "</table>";
-    }
 }
 
 $buildPage = new cmsDefaultPage($out);

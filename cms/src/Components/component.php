@@ -1,14 +1,15 @@
 <?php
 
-class component extends componentCommon
+abstract class component extends componentCommon
 {
     protected string $moduleName;
-    protected string $componentName;
-    protected int $componentId;
-    protected int $componentIsRequired;
-    protected int $componentIsMultlang;
-    protected $componentData;
-    protected $componentDataEn;
+    public string $componentName;
+    public int $componentId;
+    public int $componentIsRequired;
+    public int $componentIsMultlang;
+    public $componentData;
+    public $componentDataEn;
+    public string $columnType = "";
 
     public function __construct($moduleName, $componentName, $componentId, int $componentIsRequired, int $componentIsMultlang, $componentData = null, $componentDataEN = null){
         $this->componentName = $componentName;
@@ -18,6 +19,29 @@ class component extends componentCommon
         $this->componentData = $componentData;
         $this->componentDataEn = $componentDataEN;
         parent::__construct($moduleName);
+    }
+
+    public function getComponentData()
+    {return $this->getDataFormated()[0];}
+    public function getComponentDataEn(){return $this->getDataFormated()[1];}
+    public function getComponentIsMultlang(): int
+    {
+        return $this->componentIsMultlang;
+    }
+
+    public function getComponentIsRequired(): int
+    {
+        return $this->componentIsRequired;
+    }
+
+    public function getComponentId(): int
+    {
+        return $this->componentId;
+    }
+
+    public function getComponentName(): string
+    {
+        return $this->componentName;
     }
 
     public static function getFields($componentId): string
@@ -84,7 +108,8 @@ class component extends componentCommon
         }
         return $out;
     }
-    public function getDataFormated(){
+    public function getDataFormated()
+    {
         return [$this->componentData, $this->componentDataEn];
     }
 

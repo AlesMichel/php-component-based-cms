@@ -101,7 +101,7 @@ class SelectBox extends component
 
     public function getDataFormated(): bool|array
     {
-        return $this->getValueForId($this->componentData);
+        return $this->getValueForId($this->componentData) ;
     }
 
     private function getValueForId($id)
@@ -111,7 +111,6 @@ class SelectBox extends component
             $stmt = $this->db->prepare($sql);
             $stmt->execute(["id" => $id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
             // Pokud výsledek existuje, zkontroluj valueEn a vrátí pole [value, valueEn]
             if ($result) {
                 // Pokud valueEn je prázdné, nastavíme hodnotu null
@@ -121,11 +120,9 @@ class SelectBox extends component
                     return [$result['value'], $result['valueEn']];
                 }
             } else {
-                // Pokud nic nenalezeno, vrátí [null, null]
                 return [null, null];
             }
         } catch (Exception $e) {
-            // V případě chyby vypíšeme chybovou zprávu
             echo $e->getMessage();
             return false;
         }

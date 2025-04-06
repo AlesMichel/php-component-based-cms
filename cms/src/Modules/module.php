@@ -8,6 +8,7 @@ class Module
     protected int $moduleId;
     protected PDO $db;
 
+
     public function __construct($moduleName, $tableName = null)
     {
         $this->db = connect::getInstance()->getConnection();
@@ -112,6 +113,23 @@ class Module
         }
         return $result;
     }
+
+    /**
+     * @return int
+     * get highest id in current module table
+     */
+    public function getHighestInstance(): int {
+        try {
+            $stmt = $this->db->prepare("SELECT MAX(`id`) AS max_id FROM `$this->tableName`");
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return (int)($result['max_id'] ?? 0); // vrátí 0, pokud tabulka je prázdná
+        } catch (Exception $e) {
+            echo "Chyba: " . $e->getMessage();
+            return 0;
+        }
+    }
+
     #endregion getters
 
     //processes
@@ -129,7 +147,6 @@ class Module
 
             $insertName = $this->addModuleToCommonTable();
             $insertTable = $this->addModuleToDB();
-
 
             if($insertTable['success'] === true && $insertName['success'] === true){
                 $result['success'] = true;
@@ -190,7 +207,6 @@ class Module
         }
         return $result;
     }
-
 
     private function addModuleToCommonTable(): array
     {
@@ -273,60 +289,6 @@ class Module
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    public function updateModuleTableFields(): string
-    {
-        $message = '';
-        $components = $this->getModuleComponents();
-        foreach ($components as $component) {
-
-            $componentName = $component['name'];
-            $multilang = $component['multilang'];
-
-            $exists = $this->componentIncluded($componentName);
-
-            if (!$exists) {
-                try {
-                    $columnType = $this->getComponentColumn($component['component_id']);
-                    if($multilang == 1){
-                        $sql = "ALTER TABLE `$this->tableName` 
-                            ADD COLUMN `$componentName` $columnType, 
-                            ADD COLUMN `{$componentName}EN` $columnType";
-                    }else{
-                        $sql = "ALTER TABLE `$this->tableName` ADD COLUMN `$componentName` $columnType";
-                    }
-                    $stmt = $this->db->prepare($sql);
-                    $stmt->execute();
-                    $message .= "Sloupec `$componentName` byl úspěšně přidán jako `$columnType`.<br>";
-                } catch (PDOException $e) {
-                    $message .= "Chyba při přidávání sloupce `$componentName`: " . $e->getMessage() . "<br>";
-                }
-            }
-        }
-        return $message;
-    }
-    public function getComponentColumn($componentId) {
-        return match ($componentId) {
-            1 => 'VARCHAR(255)',
-            2 => 'TEXT',
-            3 => 'INT(11)',
-            'image' => 'LONGBLOB',
-            4 => 'VARCHAR(255)',
-            5 => 'DATE',
-            default => 'VARCHAR(255)',
-        };
-    }
-
-    /**
-     * @return bool
-     * Check if column for this component is already included in current module table
-     */
-    private function componentIncluded($componentName)
-    {
-        $sql = "SHOW COLUMNS FROM `$this->tableName` LIKE :column";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute(['column' => $componentName]);
-        return (bool) $stmt->fetch();
-    }
 
     /**
      * @return array
@@ -362,7 +324,6 @@ class Module
                 ];
             }
         }
-
         return $newArray;
     }
 

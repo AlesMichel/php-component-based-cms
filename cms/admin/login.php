@@ -26,6 +26,8 @@ if (isset($_POST['login'])) {
         header("Location: modules/index.php");
         exit();
     } else {
+        session_start();
+        $_SESSION["user"] = $user['login'];
         echo '<div class="alert alert-danger mt-3" role="alert">
            Špatné uživatelské jméno nebo heslo.
         </div>';
