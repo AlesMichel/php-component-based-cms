@@ -5,4 +5,10 @@
 - ⚙️ **Správa modulů** – tvorba, úprava a mazání modulů
 - 💾 **Ukládání dat** – podpora pro MySQL databázi a upload souborů na server
 - 🖼️ **WebP podpora** – obrázky se automaticky převádějí do formátu WebP
-- 🔒 **User login** 
+- 🔒 **User login**
+   **🛠** Použité technologie
+- **PHP 8.2**
+- **MySQL 5.7**
+- **Vanilla JavaScript**
+- **Cropper.js**
+- **Boostrap 5.3**
