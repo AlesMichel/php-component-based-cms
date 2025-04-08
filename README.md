@@ -1,4 +1,4 @@
-<h1>PHP component based cms</h1>
+<h1>simple PHP component based cms</h1>
 
 - 📦 **Modulární systém** – každý modul má vlastní databázovou tabulku a skládá se z jednotlivých komponent
 - 🧱 **Komponenty** – TextField, SelectBox, ImageUpload, Password Date, Time a další..
