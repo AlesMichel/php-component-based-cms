@@ -417,11 +417,6 @@ class componentCommon extends module
         return $newArray;
     }
 
-
-
-
-
-
     public function getModuleDataForInstance($instance)
     {
         $sql = "SELECT * FROM $this->tableName WHERE `id` = :id";
@@ -499,7 +494,6 @@ class componentCommon extends module
     protected function getColumnNameEn($componentName): string{
         return $componentName . 'EN';
     }
-
     public function updateComponentData($componentName,$instance,$componentData, $componentDataEn = null):bool{
         $columnNameEn = $this->getColumnNameEn($componentName);
         try{

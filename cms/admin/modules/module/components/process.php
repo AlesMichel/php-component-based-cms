@@ -13,8 +13,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $componentId = $_POST["component_id"];
         $componentIsMultlang = $_POST["component_isMultlang"];
         $componentIsRequired = $_POST["component_isRequired"];
+
         $component->initComponent($componentName, $componentId,$componentIsMultlang, $componentIsRequired);
         $component->updateModuleTableFields();
+
+
     } else if ($action == "update") {
         //update
     } else if ($action == "delete") {
@@ -49,6 +52,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $getComponentData = $_POST[$componentFieldName] ?? null;
             $getComponentDataEn = $_POST[$componentFieldNameEN] ?? null;
 
+
+            if($getComponentId == 4 ){
+               $getComponentData = image::uploadImage($getComponentData);
+            }
                 $path = componentCommon::buildPath($getComponentId);
                 $moduleName = $component->getName();
                 $component = new $path($moduleName,$getComponentName, $getComponentId, $getComponentIsRequired, $getComponentIsMultlang, $getComponentData, $getComponentDataEn);
@@ -77,6 +84,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $componentData = $_POST[$componentFieldName];
                 if($componentId == 6){$componentData = password_hash($componentData, PASSWORD_BCRYPT);
                 }
+
+                if($componentId == 4 ){
+                    $getComponentData = image::uploadImage($componentData);
+                }
+
                 $component->updateComponentData($componentName, $instance,$componentData, null);
             }
             header("location: ../../index.php");
