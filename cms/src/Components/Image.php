@@ -3,21 +3,8 @@ include_once("component.php");
 class Image extends component
 {
 
-//    public function __construct($moduleName, $componentName, $componentId, int $componentIsRequired, int $componentIsMultlang, $componentData = null, $componentDataEN = null){
-//        $this->componentName = $componentName;
-//        $this->componentId = $componentId;
-//        $this->componentIsRequired = $componentIsRequired;
-//        $this->componentIsMultlang = $componentIsMultlang;
-//        $this->componentData = $componentData;
-//        $this->componentDataEn = $componentDataEN;
-//        parent::__construct($moduleName);
-//    }
-
     public function __construct (...$args){
         parent::__construct(...$args);
-//        if(!empty($this->componentData)){
-//            self::uploadImage($this->componentData);
-//        }
     }
 
     public static function getFields($componentId): string
@@ -47,7 +34,7 @@ class Image extends component
     //ai
     public static function viewImage($filename): string {
         // Create the relative URL for the image
-        $src = '/cms/admin/uploads/' . basename($filename);
+        $src = '/cms/cms/uploads/' . basename($filename);
 
         // Return the HTML to display the image
         return '<img src="' . htmlspecialchars($src) . '" style="max-width:100px; min-width:100px;" alt="Image" class="img-thumbnail" />';

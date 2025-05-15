@@ -34,10 +34,16 @@ if (empty($moduleComponents)) {
         $out .= "<tbody>";
 
         foreach ($dataSet as $componentArray) {
+
                $component = $componentArray['componentObject'];
+                if($component->getComponentId() == 4) {
+                    $componentData = image::viewImage($component->getComponentData());
+                }else{
+                    $componentData = $component->getComponentData();
+                }
                 $out .= "<tr>";
                 $out .= "<td>" . $component->getComponentName() . "</td>";
-                $out .= "<td>" . $component->getComponentData() . "</td>";
+                $out .= "<td>" . $componentData . "</td>";
                 $out .= "<td>
             <form method='POST' action='entry.php'>
                 <input name='id' type='hidden' value='" . htmlspecialchars($instance) . "'>
